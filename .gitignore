@@ -2,6 +2,9 @@
 .vscode/*
 CMakeFiles
 *.CMakeFiles
+*.cmake
 CMakeCache.txt
 GameDemo
 Makefile
+*.db
+*.dylib
