@@ -5,6 +5,9 @@ cmake_minimum_required(VERSION 3.15)
 # 项目信息
 project(GameDemo)
 
+# 设置debug模式
+# set(CMAKE_BUILD_TYPE Debug CACHE STRING "set build type to debug")
+
 # include路径
 include_directories(
     ${PROJECT_SOURCE_DIR}/ )
