@@ -7,36 +7,34 @@
 
 #include <db/db_helper.h>
 #include <db/db_test.h>
+#include <base/cfg_file.h>
+#include <config/cfg_check_files.h>
 
-int main() {
+#define INIT_TASK_COUNT 1
+const int (*INIT_TASK[INIT_TASK_COUNT])(void) = {check_save_file};
+
+int main()
+{
   system("clear");
-  db_test();
-  int fd;
+  // db_test();
+  // int fd;
 
-  char *path = "test.txt";
-  printf("access function -------------------------\n");
+  // char *path = "test.txt";
+  // printf("access function -------------------------\n");
+  // fileCanRW(path);
 
-  if ((fd = access(path, F_OK)) == 0)
-    printf("[access] file exist! \n");
-  else
-    printf("[access] file not exist!!\n");
-
-  if ((fd = access(path, R_OK)) == 0)
-    printf("[access] read file ok!\n");
-  else
-    printf("[access] read file no!\n");
-
-  if ((fd = access(path, W_OK)) == 0)
-    printf("[access] write file ok!\n");
-  else
-    printf("[access] write file no!\n");
-
-  if ((fd = access(path, X_OK)) == 0)
-    printf("[access] execute file ok!\n");
-  else
-    printf("[access] execute file no!\n");
-
-  mkdir("./test/adf", O_RDWR);
+  for (size_t i = 0; i < INIT_TASK_COUNT; i++)
+  {
+    int fun_result = INIT_TASK[i]();
+    if (fun_result != FUN_NORMAL)
+    {
+      printf("run init task error, code:%d", fun_result);
+      return 0;
+    }
+  }
+  char test[128];
+  strcat(test, "tests");
+  create_file_if_not_exist(test, FILE_TYPE_FLODER);
 
   return 0;
 }
