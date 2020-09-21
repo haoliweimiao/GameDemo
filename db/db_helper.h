@@ -1,9 +1,8 @@
 #ifndef db_helper_h
 #define db_helper_h
 
+#include "base/cfg_base.h"
 #define DB_API
-#define FUN_NORMAL 0
-#define FUN_ERROR -1
 
 /**
  * create config db, save something common data in this db
