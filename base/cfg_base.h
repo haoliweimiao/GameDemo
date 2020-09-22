@@ -29,7 +29,13 @@
  * 文件创建失败
  */
 #define FUN_ERROR_CREATE -1003
-
+/**
+ * 创建save基类文件失败 /save /save/save_1 ... /save/save_3
+ */
+#define FUN_ERROR_CREATE_SAVE_FILE -1004
+/**
+ * 存储文件夹
+ */
 const static char CFG_SAVE_BASE_FILE[5] = "save";
 
 #endif /* cfg_base_h */

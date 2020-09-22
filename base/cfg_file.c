@@ -53,6 +53,8 @@ CFG_API int fileCanRW(const char *path)
  */
 CFG_API int create_file_if_not_exist(const char *file, const int file_type)
 {
+    // 有创建新文件设置为1
+    int createNewTag = 0;
     if (file_type == FILE_TYPE_FLODER)
     {
         int fd;
@@ -60,6 +62,7 @@ CFG_API int create_file_if_not_exist(const char *file, const int file_type)
         {
             int mode = strtol("0777", NULL, 8);
             mkdir(file, mode);
+            createNewTag = 1;
         }
     }
     else if (file_type == FILE_TYPE_TEXT)
@@ -72,18 +75,24 @@ CFG_API int create_file_if_not_exist(const char *file, const int file_type)
             fp = fopen(file, "a+");
             printf("create text:%s \n", file);
             fclose(fp);
+            createNewTag = 1;
         }
     }
 
-    int result = fileCanRW(file);
-    if (result == FUN_NORMAL)
+    if (createNewTag)
     {
-        printf("create folder:%s \n", file);
-        return FUN_NORMAL;
+        int result = fileCanRW(file);
+        if (result == FUN_NORMAL)
+        {
+            printf("create folder:%s \n", file);
+            return FUN_NORMAL;
+        }
+        else
+        {
+            printf("create folder:%s failed \n", file);
+            return FUN_ERROR_CREATE;
+        }
     }
-    else
-    {
-        printf("create folder:%s failed \n", file);
-        return FUN_ERROR_CREATE;
-    }
+
+    return FUN_NORMAL;
 }
