@@ -2,6 +2,9 @@
 # CMake 最低版本号要求
 cmake_minimum_required(VERSION 3.15)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -Wall")
+
 # 项目信息
 project(GameDemo)
 
@@ -10,9 +13,11 @@ project(GameDemo)
 
 # 指定头文件搜索路径
 include_directories( ${PROJECT_SOURCE_DIR}/ )
-include_directories( db )
-include_directories( base )
-include_directories( config )
+include_directories(
+     db 
+     base 
+     config 
+     cache )
 include_directories( cache )
 
 # 把 第三方 库 的 .a 文件和 .h 文件放到 代码的 lib 文件夹

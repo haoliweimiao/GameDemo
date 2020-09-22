@@ -9,6 +9,7 @@
 #include <db/db_test.h>
 #include <base/cfg_file.h>
 #include <config/cfg_check_files.h>
+#include <cache/cache_file.h>
 
 #define INIT_TASK_COUNT 1
 const int (*INIT_TASK[INIT_TASK_COUNT])(void) = {check_save_file};
@@ -16,12 +17,6 @@ const int (*INIT_TASK[INIT_TASK_COUNT])(void) = {check_save_file};
 int main()
 {
   system("clear");
-  // db_test();
-  // int fd;
-
-  // char *path = "test.txt";
-  // printf("access function -------------------------\n");
-  // fileCanRW(path);
 
   for (size_t i = 0; i < INIT_TASK_COUNT; i++)
   {
@@ -32,9 +27,6 @@ int main()
       return 0;
     }
   }
-  char test[128];
-  strcat(test, "tests");
-  create_file_if_not_exist(test, FILE_TYPE_FLODER);
 
   return 0;
 }

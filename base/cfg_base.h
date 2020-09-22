@@ -34,6 +34,19 @@
  */
 #define FUN_ERROR_CREATE_SAVE_FILE -1004
 /**
+ * gCacheMap 缓存插入数据失败
+ */
+#define FUN_ERROR_CACHE_INSERT_FAILED -2000
+/**
+ * gCacheMap 缓存查询数据失败
+ */
+#define FUN_ERROR_CACHE_QUERY_FAILED -2001
+/**
+ * gCacheMap 缓存清除数据失败
+ */
+#define FUN_ERROR_CACHE_REMOVE_FAILED -2002
+
+/**
  * 存储文件夹
  */
 const static char CFG_SAVE_BASE_FILE[5] = "save";
