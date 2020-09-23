@@ -1,7 +1,7 @@
 #ifndef db_helper_h
 #define db_helper_h
 
-#include "base/cfg_base.h"
+#include <module_base/cfg_base.h>
 #define DB_API
 
 /**

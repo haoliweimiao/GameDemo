@@ -14,6 +14,10 @@
  */
 #define FUN_ERROR -1
 /**
+ * 程序初始化任务运行失败
+ */
+#define FUN_ERROR_INIT_TASK_FAILED -10
+/**
  * 文件不存在
  */
 #define FUN_ERROR_FILE_NOT_EXIST -1000

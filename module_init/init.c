@@ -1,8 +1,9 @@
 #include <stdio.h>
-#include <base/cfg_file.h>
+#include <module_base/cfg_file.h>
 #include <string.h>
 
-#include "cfg_check_files.h"
+#include "init.h"
+
 /**
  * 存档文件夹数量
  */
@@ -38,5 +39,22 @@ const CFG_API int check_save_file(void)
     }
 
     printf("check save file task finish, state:success! \n");
+    return FUN_NORMAL;
+}
+/**
+ * 初始化任务执行
+ */
+CFG_API int init_task_exec()
+{
+    for (size_t i = 0; i < INIT_TASK_COUNT; i++)
+    {
+        int fun_result = INIT_TASK[i]();
+        if (fun_result != FUN_NORMAL)
+        {
+            printf("run init task error, code:%d", fun_result);
+            return FUN_ERROR_INIT_TASK_FAILED;
+        }
+    }
+
     return FUN_NORMAL;
 }

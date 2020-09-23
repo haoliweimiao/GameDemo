@@ -14,22 +14,17 @@ project(GameDemo)
 # 指定头文件搜索路径
 include_directories( ${PROJECT_SOURCE_DIR}/ )
 include_directories(
-     db 
-     base 
-     config 
-     cache )
-include_directories( cache )
-
-# 把 第三方 库 的 .a 文件和 .h 文件放到 代码的 lib 文件夹
-# 指定库搜索路径
-link_directories( ${PROJECT_SOURCE_DIR}/ )
+     module_db 
+     module_base 
+     module_cache 
+     module_init )
 
 #使用命令 ADD_SUBDIRECTORY 指明本项目包含一个子目录 db
 # 指定 编译子目录
-ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/db )
-ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/base )
-ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/config )
-ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/cache )
+ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_db )
+ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_base )
+ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_cache )
+ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_init )
 
 # 指定源码目录
 # 查找当前目录下的所有源文件
@@ -43,6 +38,6 @@ ADD_EXECUTABLE(GameDemo ${DIR_SRCS})
 TARGET_LINK_LIBRARIES( 
     GameDemo 
     lib_base 
-    lib_config
     lib_db 
-    lib_cache )
+    lib_cache 
+    lib_init )
