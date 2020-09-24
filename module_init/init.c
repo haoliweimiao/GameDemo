@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <module_base/cfg_file.h>
+#include <module_db/db_helper.h>
 #include <string.h>
 
 #include "init.h"
@@ -41,6 +42,40 @@ const CFG_API int check_save_file(void)
     printf("check save file task finish, state:success! \n");
     return FUN_NORMAL;
 }
+
+/**
+ * check save database in file save1...save3
+ */
+const CFG_API int check_save_db_create_state(void)
+{
+    printf("check save db task starting! \n");
+    char file[128];
+
+    for (size_t i = 0; i < CFG_SAVE_FILES_NUMBER; i++)
+    {
+        memset(file, '\0', 1);
+        strcat(file, CFG_SAVE_BASE_FILE);
+        strcat(file, "/");
+        strcat(file, CFG_SAVE_FILES[i]);
+        strcat(file, "/");
+        strcat(file, CFG_SAVE_DB_NAME);
+        int ret = create_config_db(file);
+        if (ret != FUN_NORMAL)
+        {
+            return ret;
+        }
+
+        ret = create_save_table(file);
+        if (ret != FUN_NORMAL)
+        {
+            return ret;
+        }
+    }
+
+    printf("check save db task finish, state:success! \n");
+    return FUN_NORMAL;
+}
+
 /**
  * 初始化任务执行
  */

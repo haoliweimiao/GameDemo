@@ -38,6 +38,10 @@
  */
 #define FUN_ERROR_CREATE_SAVE_FILE -1004
 /**
+ * 创建db失败
+ */
+#define FUN_ERROR_CREATE_DB -1200
+/**
  * gCacheMap 缓存插入数据失败
  */
 #define FUN_ERROR_CACHE_INSERT_FAILED -2000
@@ -53,6 +57,10 @@
 /**
  * 存储文件夹
  */
-const static char CFG_SAVE_BASE_FILE[5] = "save";
+#define CFG_SAVE_BASE_FILE "save"
+/**
+ * 存储文件夹内数据库名称
+ */
+#define CFG_SAVE_DB_NAME "save.db"
 
 #endif /* cfg_base_h */

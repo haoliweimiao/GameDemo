@@ -16,11 +16,11 @@ const CFG_API int check_save_db_create_state(void);
 /**
  * init task count
  */
-#define INIT_TASK_COUNT 1
+#define INIT_TASK_COUNT 2
 /**
  * init task array
  */
-const int (*INIT_TASK[INIT_TASK_COUNT])(void) = {check_save_file};
+const int (*INIT_TASK[INIT_TASK_COUNT])(void) = {check_save_file, check_save_db_create_state};
 
 /**
  * 初始化任务执行

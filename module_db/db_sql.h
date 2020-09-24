@@ -4,10 +4,6 @@
 /**
  * config db name
  */
-char CONFIG_DB_NAME[] = "config.db";
-/**
- * create config table sql
- */
-char CREATE_CONFIG_DB_SQL[] = "";
+#define CONFIG_DB_NAME "config.db"
 
 #endif /* db_sql_h */

@@ -1,4 +1,3 @@
-#include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,28 +5,28 @@
 #include "db_helper.h"
 #include "db_sql.h"
 
-DB_API int create_config_db()
+DB_API int create_config_db(const char *dbPath)
 {
   sqlite3 *db;
   int rc;
 
   /* Open database */
-  rc = sqlite3_open(CONFIG_DB_NAME, &db);
+  rc = sqlite3_open(dbPath, &db);
   if (rc)
   {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-    return FUN_ERROR;
+    return FUN_ERROR_CREATE_DB;
   }
   else
   {
-    fprintf(stdout, "Opened database successfully\n");
+    fprintf(stdout, "Opened database:%s successfully\n", dbPath);
   }
 
   sqlite3_close(db);
   return FUN_NORMAL;
 }
 
-DB_API int create_save_table()
+DB_API int create_save_table(const char *dbPath)
 {
   sqlite3 *db;
   char *zErrMsg = 0;
@@ -35,19 +34,19 @@ DB_API int create_save_table()
   char *sql;
 
   /* Open database */
-  rc = sqlite3_open(CONFIG_DB_NAME, &db);
+  rc = sqlite3_open(dbPath, &db);
   if (rc)
   {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-    return FUN_ERROR;
+    return FUN_ERROR_CREATE_DB;
   }
   else
   {
-    fprintf(stdout, "Opened database successfully\n");
+    fprintf(stdout, "Opened database:%s successfully\n", dbPath);
   }
 
   /* Create SQL statement */
-  sql = "CREATE TABLE OPTION("
+  sql = "CREATE TABLE IF NOT EXISTS OPTION("
         "ID INTEGER PRIMARY KEY  AUTOINCREMENT NOT NULL,"
         "KEY            TEXT     NOT NULL,"
         "VALUE          TEXT     NOT NULL);";
@@ -68,7 +67,7 @@ DB_API int create_save_table()
   return FUN_NORMAL;
 }
 
-DB_API int db_insert_data(const char *key, const char *value)
+DB_API int db_insert_data(const char *dbPath, const char *key, const char *value)
 {
 
   sqlite3 *db;
@@ -76,10 +75,11 @@ DB_API int db_insert_data(const char *key, const char *value)
   int rc;
 
   /* Open database */
-  rc = sqlite3_open(CONFIG_DB_NAME, &db);
+  rc = sqlite3_open(dbPath, &db);
   if (rc)
   {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
     return FUN_ERROR;
   }
 
@@ -136,62 +136,78 @@ DB_API int db_query_callback(void *NotUsed, int argc, char **argv,
   return FUN_NORMAL;
 }
 
-DB_API int db_query_data(char *key, char *value)
+DB_API int db_query_data(const char *dbPath, char *key, char *value)
 {
   sqlite3 *db;
-  char *zErrMsg = 0;
-  int rc;
-
-  /* Open database */
-  rc = sqlite3_open(CONFIG_DB_NAME, &db);
-  if (rc)
+  char *zErrMsg = NULL;
+  int rv;
+  char szSql[128] = {0};
+  sqlite3_stmt *stmt;
+  rv = sqlite3_open(dbPath, &db);
+  if (rv)
   {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
     return FUN_ERROR;
   }
 
-  char sql[1024] = "select VALUE from OPTION where KEY = '";
-  strcat(sql, key);
-  strcat(sql, "';");
-
-  printf("sql: %s \n", sql);
-
-  /* Execute SQL statement */
-  rc = sqlite3_exec(db, sql, db_query_callback, 0, &zErrMsg);
-  if (rc != SQLITE_OK)
+  strcpy(szSql, "SELECT VALUE FROM OPTION where KEY=?");
+  rv = sqlite3_prepare(db, szSql, 128, &stmt, NULL);
+  if (rv != SQLITE_OK)
   {
-    fprintf(stderr, "SQL error: %s\n", zErrMsg);
-    sqlite3_free(zErrMsg);
+    fprintf(stderr, "sqlite3_prepare(%d): %s\n", rv, sqlite3_errmsg(db));
+    sqlite3_close(db);
+    return FUN_ERROR;
   }
-  else
+  rv = sqlite3_bind_text(stmt, 1, key, strlen(key), SQLITE_STATIC);
+  if (rv != SQLITE_OK)
   {
-    fprintf(stdout, "query data:%s successfully\n", db_query_value);
+    fprintf(stderr, "sqlite3_bind_text(%d): %s\n", rv, sqlite3_errmsg(db));
+    sqlite3_close(db);
+    return FUN_ERROR;
   }
-
-  strcat(value, db_query_value);
-  memset(db_query_value, '\0', sizeof(db_query_value) / sizeof(char));
-
+  rv = sqlite3_step(stmt);
+  if ((rv != SQLITE_OK) && (rv != SQLITE_DONE) && (rv != SQLITE_ROW))
+  {
+    fprintf(stderr, "sqlite3_step(%d): %s\n", rv, sqlite3_errmsg(db));
+    sqlite3_close(db);
+    return FUN_ERROR;
+  }
+  while (rv == SQLITE_ROW)
+  {
+    memset(value, '\0', 1);
+    strcat(value, sqlite3_column_text(stmt, 0));
+    fprintf(stderr, "result: %s\n", value);
+    rv = sqlite3_step(stmt);
+  }
+  rv = sqlite3_finalize(stmt);
+  if (rv != SQLITE_OK)
+  {
+    fprintf(stderr, "sqlite3_finalize(%d): %s\n", rv, sqlite3_errmsg(db));
+    sqlite3_close(db);
+    return FUN_ERROR;
+  }
   sqlite3_close(db);
-
   return FUN_NORMAL;
 }
 
-DB_API int db_delete_data(const char *key)
+DB_API int db_delete_data(const char *dbPath, const char *key)
 {
   sqlite3 *db;
   char *zErrMsg = 0;
   int rc;
 
   /* Open database */
-  rc = sqlite3_open(CONFIG_DB_NAME, &db);
+  rc = sqlite3_open(dbPath, &db);
   if (rc)
   {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
     return FUN_ERROR;
   }
   else
   {
-    fprintf(stdout, "Opened database successfully\n");
+    fprintf(stdout, "Opened database:%s successfully\n", dbPath);
   }
 
   char sql[1024] = "delete from OPTION where KEY = '";
@@ -213,17 +229,17 @@ DB_API int db_delete_data(const char *key)
   return FUN_NORMAL;
 }
 
-DB_API int db_update_data(char *key, char *value)
+DB_API int db_update_data(const char *dbPath, char *key, char *value)
 {
   // 数据库不存在key，应该先插入数据
   char query_value[1024] = {0};
-  db_query_data(key, query_value);
+  db_query_data(dbPath, key, query_value);
   int query_value_length = strlen(query_value);
   //   printf("db_update_data value:%s length:%d \n", query_value,
   //          query_value_length);
   if (query_value_length == 0)
   {
-    db_insert_data(key, value);
+    db_insert_data(dbPath, key, value);
     return FUN_NORMAL;
   }
 
@@ -232,10 +248,11 @@ DB_API int db_update_data(char *key, char *value)
   int rc;
 
   /* Open database */
-  rc = sqlite3_open(CONFIG_DB_NAME, &db);
+  rc = sqlite3_open(dbPath, &db);
   if (rc)
   {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    sqlite3_close(db);
     return FUN_ERROR;
   }
 
