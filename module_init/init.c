@@ -70,6 +70,29 @@ const CFG_API int check_save_db_create_state(void)
         {
             return ret;
         }
+
+        // 查询数据库是否被创建使用
+        char value[16];
+        ret = db_query_data(file, CACHE_KEY_SAVE_CREATE_TAG_INT, value);
+        if (ret != FUN_NORMAL)
+        {
+            // 未查询到数据，默认为0
+            memset(value, '\0', 1);
+            strcat(value, "0");
+        }
+
+        if (i == 0)
+        {
+            cache_insert(CACHE_KEY_SAVE_1_CREATE_INT, value);
+        }
+        else if (i == 1)
+        {
+            cache_insert(CACHE_KEY_SAVE_2_CREATE_INT, value);
+        }
+        else
+        {
+            cache_insert(CACHE_KEY_SAVE_3_CREATE_INT, value);
+        }
     }
 
     printf("check save db task finish, state:success! \n");

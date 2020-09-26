@@ -17,7 +17,8 @@ include_directories(
      module_db 
      module_base 
      module_cache 
-     module_init )
+     module_init 
+     module_view )
 
 #使用命令 ADD_SUBDIRECTORY 指明本项目包含一个子目录 db
 # 指定 编译子目录
@@ -25,6 +26,7 @@ ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_db )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_base )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_cache )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_init )
+ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_view )
 
 # 指定源码目录
 # 查找当前目录下的所有源文件
@@ -40,4 +42,5 @@ TARGET_LINK_LIBRARIES(
     lib_base 
     lib_db 
     lib_cache 
-    lib_init )
+    lib_init 
+    lib_view )

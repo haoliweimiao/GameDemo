@@ -6,4 +6,5 @@ ADD_LIBRARY(lib_init SHARED ${DIR_SRC_INIT})
 target_link_libraries(
 	lib_init 
 	lib_base
-	lib_db )
+	lib_db 
+	lib_cache )
