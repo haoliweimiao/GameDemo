@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -fexceptions -Wall")
 
 # 项目信息
 project(GameDemo)
@@ -18,7 +18,8 @@ include_directories(
      module_base 
      module_cache 
      module_init 
-     module_view )
+     module_view 
+     module_json )
 
 #使用命令 ADD_SUBDIRECTORY 指明本项目包含一个子目录 db
 # 指定 编译子目录
@@ -27,6 +28,7 @@ ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_base )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_cache )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_init )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_view )
+ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_json )
 
 # 指定源码目录
 # 查找当前目录下的所有源文件
@@ -43,4 +45,5 @@ TARGET_LINK_LIBRARIES(
     lib_db 
     lib_cache 
     lib_init 
-    lib_view )
+    lib_view 
+    lib_json )

@@ -11,5 +11,6 @@ int main()
   init_task_exec();
 
   show_view_start();
+
   return 0;
 }
