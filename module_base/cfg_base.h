@@ -1,6 +1,10 @@
 #ifndef cfg_base_h
 #define cfg_base_h
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 /**
  * config module API tag
  */
@@ -63,4 +67,7 @@
  */
 #define CFG_SAVE_DB_NAME "save.db"
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* cfg_base_h */
