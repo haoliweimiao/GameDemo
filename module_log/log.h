@@ -4,7 +4,14 @@
 extern "C"
 {
 #endif
+    /**
+     * printf now time
+     */
+    void LOG_TIME();
 
+    /**
+     * log i
+     */
     void LOG_I(const char *formatStr, ...);
 
 #ifdef __cplusplus

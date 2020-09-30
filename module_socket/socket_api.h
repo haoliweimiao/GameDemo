@@ -21,7 +21,7 @@ extern "C"
 #define FUN_SOCKET_NOT_CONNECT_ERROR -2
 
 /* socket config */
-#define SOCKET_DATA_LEN 1024
+#define SOCKET_DATA_LEN 1024 * 32
 #define SOCKET_LOCAL_URL "127.0.0.1"
 #define SOCKET_LOCAL_PORT 12346
 

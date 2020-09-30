@@ -55,9 +55,9 @@ SOCKET_API int clientSendMsg(const char *msg, char *value)
         LOG_I("client send message error, socket:%d code: %d", socket, FUN_SOCKET_NOT_CONNECT_ERROR);
         return FUN_SOCKET_NOT_CONNECT_ERROR;
     }
-    LOG_I("send client->server : %s", msg);
     memset(value, '\0', 1);
     send(socket, msg, strlen(msg), 0);
+    LOG_I("send client->server : %s", msg);
     read(socket, value, sizeof(value) - 1);
     LOG_I("server->client message: %s", value);
     return FUN_NORMAL;

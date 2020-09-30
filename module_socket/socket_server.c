@@ -29,7 +29,7 @@ static int socket_server_state = 0;
  * start server
  * @return fun return value
  */
-SOCKET_API int serverStart()
+SOCKET_API int startSocketServer()
 {
     if (socket_server_state == 1)
     {

@@ -2,7 +2,7 @@
 # CMake 最低版本号要求
 cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -fexceptions -Wall")
 
 # 项目信息

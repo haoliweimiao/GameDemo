@@ -12,16 +12,16 @@ extern "C"
 
 #include "socket_api.h"
 
-/**
- * start server
- * @return fun return value
- */
-SOCKET_API int serverStart();
-/**
- * stop server
- * @return fun return value
- */
-SOCKET_API int stopServer();
+    /**
+     * start server
+     * @return fun return value
+     */
+    SOCKET_API int startSocketServer();
+    /**
+     * stop server
+     * @return fun return value
+     */
+    SOCKET_API int stopServer();
 
 #ifdef __cplusplus
 }
