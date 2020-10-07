@@ -21,7 +21,8 @@ include_directories(
      module_view 
      module_json 
      module_log 
-     module_socket )
+     module_socket 
+     module_uv )
 
 #使用命令 ADD_SUBDIRECTORY 指明本项目包含一个子目录 db
 # 指定 编译子目录
@@ -33,6 +34,7 @@ ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_view )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_json )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_log )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_socket )
+ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_uv )
 
 # 指定源码目录
 # 查找当前目录下的所有源文件
@@ -52,4 +54,5 @@ TARGET_LINK_LIBRARIES(
     lib_view 
     lib_json 
     lib_log 
-    lib_socket )
+    lib_socket 
+    uv )

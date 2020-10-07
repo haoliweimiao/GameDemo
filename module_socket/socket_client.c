@@ -31,7 +31,7 @@ SOCKET_API int connectSocket(int *sock)
     {
         close(socket_client);
         (*sock) = -1;
-        LOG_I("connect server failed, exit processPF_INET");
+        LOG_I("connect server failed, exit process: PF_INET");
         return FUN_SOCKET_CONNECT_ERROR;
     }
 

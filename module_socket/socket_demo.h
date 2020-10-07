@@ -9,6 +9,8 @@ extern "C"
 #include "socket_api.h"
 #include "socket_client.h"
 #include "socket_server.h"
+#include "socket_uv_server.h"
+#include "socket_uv_client.h"
 #include <module_log/log.h>
 #include <string.h>
 #include <stdio.h>
