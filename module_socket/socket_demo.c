@@ -11,17 +11,18 @@ void *startServer(void *p)
 
 void *startClient(void *p)
 {
-    char send[SOCKET_DATA_LEN];
-    for (int i = 0; i < 160; i++)
-    {
-        strcat(send, "1234567890");
-    }
 
     LOG_TIME();
-    // char ret[SOCKET_DATA_LEN];
-    // clientSendMsg(send, ret);
-    // clientSendMsg("heartbreak:ping", ret);
-    startUvSocketClient();
+    initClient();
+    char message[SOCKET_DATA_LEN] = {};
+    memset(message, '\0', 1);
+    for (int i = 0; i < 1024; i++)
+    {
+        strcat(message, "hei");
+        strcat(message, "\n");
+    }
+
+    clientSendMessage(message, strlen(message));
     return 0;
 }
 

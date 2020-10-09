@@ -9,9 +9,15 @@ extern "C"
 #include "socket_api.h"
 
     /**
-     * uv socket client
+     * init client
      */
-    SOCKET_API int startUvSocketClient();
+    SOCKET_API int initClient();
+    /**
+     * client send message
+     * @params message: send message
+     * @params len:     send message lenght
+     */
+    SOCKET_API int clientSendMessage(const char *message, int len);
 
 #ifdef __cplusplus
 }

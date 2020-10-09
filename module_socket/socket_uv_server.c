@@ -50,7 +50,7 @@ void echo_read(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf)
         write_req_t *req = (write_req_t *)malloc(sizeof(write_req_t));
         req->buf = uv_buf_init(buf->base, nread);
         // fwrite(buf->base, SOCKET_DATA_LEN, 1, stdout);
-        printf("server recv: %s", buf->base);
+        printf("server recv len:%lu %s", strlen(buf->base), buf->base);
         uv_write((uv_write_t *)req, client, &req->buf, 1, echo_write);
         return;
     }
