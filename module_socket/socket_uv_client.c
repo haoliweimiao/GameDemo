@@ -10,13 +10,17 @@ int mClientState;
 
 static void clientWriteCB(uv_write_t *req, int status)
 {
-    LOG_I("clientWriteCB status: %d, %s\n", status, strerror(status));
+    LOG_I("clientWriteCB status: %d, %s", status, strerror(status));
     uv_close((uv_handle_t *)req->handle, NULL);
 }
 
 static void clientConnectCB(uv_connect_t *req, int status)
 {
-    LOG_I("clientConnectCB status: %d\n", status);
+    if (status != 0)
+    {
+        LOG_I("clientConnectCB error status: %d", status);
+    }
+
     mClientState = status;
 }
 

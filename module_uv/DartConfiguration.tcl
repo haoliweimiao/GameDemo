@@ -11,10 +11,10 @@ BuildDirectory: /Users/von/workspace/c/TextGame/module_uv
 CostDataFile: 
 
 # Site is something like machine.domain, i.e. pragmatic.crd
-Site: localhost
+Site: PC.local
 
 # Build name is osname-revision-compiler, i.e. Linux-2.4.2-2smp-c++
-BuildName: Darwin-c++
+BuildName: Darwin-llvm-g++
 
 # Subprojects
 LabelsForSubprojects: 
@@ -62,7 +62,7 @@ UpdateOptions:
 UpdateType: 
 
 # Compiler info
-Compiler: /Library/Developer/CommandLineTools/usr/bin/c++
+Compiler: /usr/bin/llvm-g++
 CompilerVersion: 12.0.0.12000032
 
 # Dynamic analysis (MemCheck)

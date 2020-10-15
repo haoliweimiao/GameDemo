@@ -30,6 +30,30 @@ void LOG_I(const char *formatStr, ...)
     va_end(params);
 }
 
+///
+//    LOG_E()
+//
+//    Log an message to the debug output for the platform
+//
+void LOG_E(const char *formatStr, ...)
+{
+    va_list params;
+    char buf[BUFSIZ];
+
+    va_start(params, formatStr);
+    vsprintf(buf, formatStr, params);
+
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_INFO, "esUtil", "%s", buf);
+#else
+    char timeStr[48];
+    getNowTime(timeStr);
+    printf("%s %s\n", timeStr, buf);
+#endif
+
+    va_end(params);
+}
+
 /**
  * 获取当前时间
  */

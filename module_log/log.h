@@ -14,6 +14,11 @@ extern "C"
      */
     void LOG_I(const char *formatStr, ...);
 
+    /**
+     * log e
+     */
+    void LOG_E(const char *formatStr, ...);
+
 #ifdef __cplusplus
 }
 #endif

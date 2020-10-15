@@ -19,6 +19,7 @@ extern "C"
 #define FUN_NORMAL 0
 #define FUN_SOCKET_CONNECT_ERROR -1
 #define FUN_SOCKET_NOT_CONNECT_ERROR -2
+#define FUN_SOCKET_SERVER_LISTEN_ERROR -3
 #define FUN_SOCKET_CLIENT_SEND_MSG_ERROR -10
 
 /* socket config */

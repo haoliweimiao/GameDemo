@@ -11,20 +11,21 @@ extern "C"
 #endif
 
 #include "socket_api.h"
+#include <module_json/json_demo.h>
 
-/**
+    /**
  * connect server Socket
  * @return fun return value
  */
-SOCKET_API int connectSocket(int *sock);
+    SOCKET_API int connectSocket(int *sock);
 
-/**
+    /**
  * send message to server
  * @param msg send message content
  * @param value message return message, can be null
  * @return fun return value
  */
-SOCKET_API int clientSendMsg(const char *msg, char *value);
+    SOCKET_API int clientSendMsg(const char *msg, char *value);
 
 #ifdef __cplusplus
 }
