@@ -113,11 +113,11 @@ DB_API int db_insert_data(const char *dbPath, const char *key, const char *value
 /**
  * db_query_data query value char[] length
  */
-const int DB_QUERY_VALUE_LEN = 1024;
+#define DB_QUERY_VALUE_LEN 1024
 /**
  * db_query_data query value char[]
  */
-char db_query_value[DB_QUERY_VALUE_LEN] = "";
+char db_query_value[DB_QUERY_VALUE_LEN] = {0};
 /**
  * db_query_data sqlite3_exec callback function
  */

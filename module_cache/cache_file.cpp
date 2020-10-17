@@ -1,6 +1,6 @@
 #include <iostream>
 #include <map>
-#include <string>
+#include <string.h>
 #include <stdio.h>
 #include "cache_file.h"
 

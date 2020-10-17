@@ -14,7 +14,7 @@ CostDataFile:
 Site: PC.local
 
 # Build name is osname-revision-compiler, i.e. Linux-2.4.2-2smp-c++
-BuildName: Darwin-llvm-g++
+BuildName: Darwin-g++-10
 
 # Subprojects
 LabelsForSubprojects: 
@@ -62,8 +62,8 @@ UpdateOptions:
 UpdateType: 
 
 # Compiler info
-Compiler: /usr/bin/llvm-g++
-CompilerVersion: 12.0.0.12000032
+Compiler: /usr/local/Cellar/gcc/10.2.0/bin/g++-10
+CompilerVersion: 10.2.0
 
 # Dynamic analysis (MemCheck)
 PurifyCommand: 

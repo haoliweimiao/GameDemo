@@ -2,11 +2,18 @@
 # CMake 最低版本号要求
 cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_CXX_COMPILER "clang++")
-set(CMAKE_C_COMPILER "clang")
+IF (WIN32)
+	MESSAGE(STATUS "Now is windows")
+ELSEIF (APPLE)
+	MESSAGE(STATUS "Now is Apple systens.")
+     set(CMAKE_CXX_COMPILER "/usr/local/Cellar/gcc/10.2.0/bin/g++-10")
+     set(CMAKE_C_COMPILER "/usr/local/Cellar/gcc/10.2.0/bin/gcc-10")
+ELSEIF (UNIX)
+	MESSAGE(STATUS "Now is UNIX-like OS's.")
+ENDIF ()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++11 -fno-rtti -fno-exceptions -fexceptions -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -fexceptions -Wall")
 # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
 # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld -stdlib=libc++ -lc++abi")
 
@@ -24,7 +31,7 @@ include_directories(
      module_cache 
      module_init 
      module_view 
-     module_json 
+     jsoncpp/include 
      module_log 
      module_socket 
      module_uv )
@@ -36,7 +43,7 @@ ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_base )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_cache )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_init )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_view )
-ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_json )
+ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/jsoncpp )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_log )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_socket )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_uv )
@@ -57,7 +64,7 @@ TARGET_LINK_LIBRARIES(
     lib_cache 
     lib_init 
     lib_view 
-    lib_json 
     lib_log 
     lib_socket 
+    jsoncpp 
     uv )

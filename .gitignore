@@ -10,3 +10,4 @@ Makefile
 *.db
 *.dylib
 /build
+/lib
