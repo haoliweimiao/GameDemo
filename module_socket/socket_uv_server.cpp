@@ -5,6 +5,8 @@
 #include <string.h>
 #include <uv.h>
 #include <module_log/log.h>
+#include <json/json.h>
+#include <iostream>
 
 #define DEFAULT_BACKLOG 128
 
@@ -51,7 +53,38 @@ void echo_read(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf)
     {
         write_req_t *req = (write_req_t *)malloc(sizeof(write_req_t));
         req->buf = uv_buf_init(buf->base, nread);
-        LOG_I("server recv len: %d: content: \n%s", strlen(buf->base), buf->base);
+        char *message = buf->base;
+        int clientMsgLen = strlen(buf->base);
+        if (clientMsgLen == 0)
+        {
+            LOG_E("server recv len: 0!");
+            return;
+        }
+
+        const auto rawJsonLength = static_cast<int>(clientMsgLen);
+        constexpr bool shouldUseOldWay = false;
+        JSONCPP_STRING err;
+        Json::Value root;
+
+        if (shouldUseOldWay)
+        {
+            Json::Reader reader;
+            reader.parse(message, root);
+        }
+        else
+        {
+            Json::CharReaderBuilder builder;
+            const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+            if (!reader->parse(message, message + rawJsonLength, &root,
+                               &err))
+            {
+                std::cout << "error" << std::endl;
+                return;
+            }
+        }
+        const std::string type = root[SOCKET_MSG_KEY_TYPE].asString();
+        const std::string content = root[SOCKET_MSG_KEY_CONTENT].asString();
+        LOG_I("server recv type: %s: content: %s", type.c_str(), content.c_str());
         uv_write((uv_write_t *)req, client, &req->buf, 1, echo_write);
         return;
     }

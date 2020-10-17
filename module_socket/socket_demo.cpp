@@ -3,8 +3,20 @@
 #include <unistd.h>
 #include <iostream>
 #include <stddef.h>
+#include <string.h>
 #include <module_base/cfg_base.h>
 #include <json/json.h>
+
+static pthread_mutex_t mSocketDemoLock = PTHREAD_MUTEX_INITIALIZER;
+static int mMsgId = 0;
+
+int getMessageId()
+{
+    pthread_mutex_lock(&mSocketDemoLock);
+    mMsgId++;
+    pthread_mutex_unlock(&mSocketDemoLock);
+    return mMsgId;
+}
 
 int jsoncppDemo()
 {
@@ -96,7 +108,7 @@ int jsoncppDemo()
     //     cout << "remove_age:" << root.removeMember("age") << endl;
 
     //     system("pause");
-    //     return 0;
+    return 0;
 }
 
 CFG_API int readFromStringDemo()
@@ -128,6 +140,28 @@ CFG_API int readFromStringDemo()
 
     std::cout << name << std::endl;
     std::cout << age << std::endl;
+
+    Json::Value createJson;
+    // createJson["null"] = NULL; //注意此处在输出是显示为0，而非null
+    createJson["message"] = "OK";
+    createJson["age"] = 52;
+    createJson["array"].append("arr"); // 新建一个key为array，类型为数组，对第一个元素赋值为字符串“arr”
+    createJson["array"].append(123);   // 为数组 key_array 赋值，对第二个元素赋值为：1234
+    createJson["test"].append(createJson);
+
+    Json::ValueType type = createJson.type(); //createJson的类型
+
+    std::cout << createJson.toStyledString() << std::endl; //格式化输出
+    std::cout << "createJson_type：" << type << std::endl; //类型为7，即为类型为对象
+
+    // Json::FastWriter fast_writer;
+    // std::string str = fast_writer.write(createJson);
+    // std::cout << str << std::endl;
+
+    // Json::StyledWriter style_writer;
+    // str = style_writer.write(createJson);
+    // std::cout << str << std::endl;
+
     return EXIT_SUCCESS;
 }
 
@@ -137,6 +171,22 @@ void *startServer(void *p)
     // startSocketServer();
     startUvSocketServer();
     return 0;
+}
+
+void createPingMessage(char *message)
+{
+    memset(message, '\0', 1);
+    Json::Value createJson;
+    // {"type":"heartbreak", "id":"12345678", "len":"1", "lenID":"1", "content":"ping", "contentLen":4}
+    createJson[SOCKET_MSG_KEY_TYPE] = SOCKET_TYPE_HEART_BREAK;
+    createJson[SOCKET_MSG_KEY_ID] = getMessageId();
+    createJson[SOCKET_MSG_KEY_LEN] = 1;
+    createJson[SOCKET_MSG_KEY_CONTENT] = SOCKET_MSG_PING;
+    int contentLen = strlen(SOCKET_MSG_PING);
+    createJson[SOCKET_MSG_KEY_CONTENT_LEN] = contentLen;
+
+    std::string jsonMsg = createJson.toStyledString();
+    strcpy(message, jsonMsg.c_str());
 }
 
 void *startClient(void *p)
@@ -149,18 +199,9 @@ void *startClient(void *p)
         LOG_E("init client failed!");
     }
     char message[SOCKET_DATA_LEN] = {0};
-    memset(message, '\0', 1);
-    for (int i = 0; i < 1; i++)
-    {
-        strcat(message, "hei");
-        strcat(message, "\n");
-    }
-
+    createPingMessage(message);
     int sendMsgLen = strlen(message);
-    // LOG_I("send message length:%d", sendMsgLen);
-
     ret = clientSendMessage(message, sendMsgLen);
-    // LOG_I("send message result code:%d", ret);
     return 0;
 }
 
@@ -176,7 +217,7 @@ SOCKET_API int startServer$Client()
     // 创建第一个线程
     rc = pthread_create(&id, NULL, startServer, NULL);
     if (rc)
-        printf("Failed to create the thread fun1().");
+        printf("Failed to create the thread startServer().");
     // 休眠1s，让server先创建完
     // sleep(1);
     // 创建第二个线程
@@ -185,7 +226,7 @@ SOCKET_API int startServer$Client()
         sleep(1);
         rc = pthread_create(&id, NULL, startClient, NULL);
         if (rc)
-            printf("Failed to create the thread fun2().");
+            printf("Failed to create the thread startClient().");
     }
 
     // 阻塞主线程的运行，以免主线程运行结束时提前终止子线程

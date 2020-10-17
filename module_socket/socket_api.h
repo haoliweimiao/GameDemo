@@ -27,6 +27,21 @@ extern "C"
 #define SOCKET_LOCAL_URL "127.0.0.1"
 #define SOCKET_LOCAL_PORT 12346
 
+/**
+ * socket message key
+ */
+#define SOCKET_MSG_KEY_TYPE "type"
+#define SOCKET_MSG_KEY_ID "id"
+#define SOCKET_MSG_KEY_LEN "len"
+#define SOCKET_MSG_KEY_CONTENT "content"
+#define SOCKET_MSG_KEY_CONTENT_LEN "contentLen"
+
+#define SOCKET_TYPE_HEART_BREAK "heartbreak"
+#define SOCKET_MSG_PING "ping"
+#define SOCKET_MSG_PING_LEN 5
+#define SOCKET_MSG_PONG "pong"
+#define SOCKET_MSG_PONG_LEN 5
+
 #ifdef __cplusplus
 }
 #endif
