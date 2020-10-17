@@ -11,3 +11,6 @@ Makefile
 *.dylib
 /build
 /lib
+CMakeScripts
+*.xcodeproj
+*.build

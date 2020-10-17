@@ -4,8 +4,8 @@
 
 
 # Configuration directories and files
-SourceDirectory: /Users/von/workspace/c/TextGame/module_uv
-BuildDirectory: /Users/von/workspace/c/TextGame/module_uv
+SourceDirectory: /Users/von/workspace/c/GameDemo/module_uv
+BuildDirectory: /Users/von/workspace/c/GameDemo/module_uv
 
 # Where to place the cost data store
 CostDataFile: 
@@ -14,7 +14,7 @@ CostDataFile:
 Site: PC.local
 
 # Build name is osname-revision-compiler, i.e. Linux-2.4.2-2smp-c++
-BuildName: Darwin-g++-10
+BuildName: Darwin-clang++
 
 # Subprojects
 LabelsForSubprojects: 
@@ -26,7 +26,7 @@ SubmitURL: http://
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/Applications/CMake.app/Contents/bin/cmake" "/Users/von/workspace/c/TextGame/module_uv"
+ConfigureCommand: "/Applications/CMake.app/Contents/bin/cmake" "/Users/von/workspace/c/GameDemo/module_uv"
 MakeCommand: /Applications/CMake.app/Contents/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 
@@ -62,8 +62,8 @@ UpdateOptions:
 UpdateType: 
 
 # Compiler info
-Compiler: /usr/local/Cellar/gcc/10.2.0/bin/g++-10
-CompilerVersion: 10.2.0
+Compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++
+CompilerVersion: 12.0.0.12000032
 
 # Dynamic analysis (MemCheck)
 PurifyCommand: 
@@ -94,7 +94,7 @@ TimeOut: 1500
 # so would cause the system load to exceed this value.
 TestLoad: 
 
-UseLaunchers: 
+UseLaunchers: 0
 CurlOptions: 
 # warning, if you add new options here that have to do with submit,
 # you have to update cmCTestSubmitCommand.cxx

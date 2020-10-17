@@ -2,6 +2,8 @@
 # CMake 最低版本号要求
 cmake_minimum_required(VERSION 3.15)
 
+set(CMAKE_SYSTEM_NAME Darwin)
+
 IF (WIN32)
 	MESSAGE(STATUS "Now is windows")
 ELSEIF (APPLE)
@@ -17,6 +19,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -fe
 # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
 # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld -stdlib=libc++ -lc++abi")
 
+
+SET (CMAKE_C_COMPILER_WORKS 1)
+SET (CMAKE_CXX_COMPILER_WORKS 1)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 # 项目信息
 project(GameDemo)
 
