@@ -52,7 +52,7 @@ SOCKET_API int startSocketServer()
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); //具体的IP地址
     serv_addr.sin_port = htons(SOCKET_LOCAL_PORT); //端口
     int bindResult =
-        bind(serverSock, (struct sockaddr_in *)&serv_addr, sizeof(serv_addr));
+        bind(serverSock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
 
     if (bindResult == -1)
     {

@@ -7,7 +7,8 @@ std::string GetUVError(int retcode)
     err = uv_err_name(retcode);
     err += ":";
     err += uv_strerror(retcode);
-    return std::move(err);
+    std::string ret = std::move(err);
+    return ret;
 }
 
 namespace uv
@@ -418,7 +419,7 @@ namespace uv
 
     /*****************************************TCP Client*************************************************************/
     TCPClient::TCPClient(uv_loop_t *loop)
-        : recvcb_(nullptr), userdata_(nullptr), connectstatus_(CONNECT_DIS), isinit_(false)
+        : connectstatus_(CONNECT_DIS), recvcb_(nullptr), userdata_(nullptr), isinit_(false)
     {
         readbuffer_ = uv_buf_init((char *)malloc(BUFFERSIZE), BUFFERSIZE);
         writebuffer_ = uv_buf_init((char *)malloc(BUFFERSIZE), BUFFERSIZE);

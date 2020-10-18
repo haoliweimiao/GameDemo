@@ -1,9 +1,11 @@
 #include "socket_uv_client.h"
-#include <json/json.h>
+
 #include <iostream>
+#include <json/json.h>
 #include <module_log/log.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <uv.h>
 
 uv_loop_t mLoop;
@@ -12,96 +14,31 @@ uv_connect_t mConnRrequest;
 uv_write_t mWriteRequest;
 int mClientState;
 
-typedef struct {
-    uv_write_t req;
-    uv_buf_t buf;
-} write_req_t;
-
-typedef struct {
-  int pongs;
-  int state;
-  uv_tcp_t tcp;
-  uv_connect_t connect_req;
-  uv_shutdown_t shutdown_req;
-} pinger_t;
-
 static void clientWriteCB(uv_write_t *req, int status) {
   LOG_I("clientWriteCB status: %d, %s", status, strerror(status));
+
+  int ret = uv_is_readable(req->handle);
+  LOG_I("uv_is_readable %d", ret);
+
+  ret = uv_is_writable(req->handle);
+  LOG_I("uv_is_writable %d", ret);
+
+  ret = uv_is_closing((uv_handle_t *)req->handle);
+  LOG_I("uv_is_closing %d", ret);
+  LOG_I("client msg %s", req->bufs->base);
+
+  free(req);
+
   uv_close((uv_handle_t *)req->handle, NULL);
-}
-
-typedef struct buf_s {
-  uv_buf_t uv_buf_t;
-  struct buf_s *next;
-} buf_t;
-
-static buf_t *buf_freelist = NULL;
-
-static void buf_alloc(uv_handle_t *tcp, size_t size, uv_buf_t *buf) {
-  buf->base = (char *)malloc(size);
-  buf->len = size;
-}
-
-static void pinger_read_cb(uv_stream_t *tcp, ssize_t nread,
-                           const uv_buf_t *buf) {
-  if (nread > 0) {
-    write_req_t *req = (write_req_t *)malloc(sizeof(write_req_t));
-    req->buf = uv_buf_init(buf->base, nread);
-    char *message = buf->base;
-    int clientMsgLen = strlen(buf->base);
-    if (clientMsgLen == 0) {
-      LOG_E("server recv len: 0!");
-      return;
-    }
-
-    const auto rawJsonLength = static_cast<int>(clientMsgLen);
-
-    JSONCPP_STRING err;
-    Json::Value root;
-
-    Json::CharReaderBuilder builder;
-    const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-    if (!reader->parse(message, message + rawJsonLength, &root, &err)) {
-      std::cout << "error" << std::endl;
-      return;
-    }
-
-    const std::string type = root[SOCKET_MSG_KEY_TYPE].asString();
-    const std::string content = root[SOCKET_MSG_KEY_CONTENT].asString();
-    const int id = root[SOCKET_MSG_KEY_ID].asInt();
-
-    LOG_I("client recv type: %s: content: %s", type.c_str(), content.c_str());
-
-    if (strcmp(SOCKET_TYPE_HEART_BREAK, type.c_str())) {
-      char callbackMsg[SOCKET_DATA_LEN] = {0};
-      createPongMessage(callbackMsg, id);
-      //        uv_buf_t *bufCallback;
-      //        bufCallback->base=callbackMsg;
-      //        bufCallback->len=strlen(callbackMsg);
-      uv_write((uv_write_t *)req, client, &req->buf, 1, echo_write);
-    }
-    uv_write((uv_write_t *)req, client, &req->buf, 1, echo_write);
-    return;
-  }
-  if (nread < 0) {
-    if (nread != UV_EOF)
-      LOG_E("Read error %s", uv_err_name(nread));
-    uv_close((uv_handle_t *)client, on_close);
-  }
-
-  free(buf->base);
 }
 
 static void clientConnectCB(uv_connect_t *req, int status) {
   if (status != 0) {
     LOG_I("clientConnectCB error status: %d", status);
+    free(req);
   }
 
   mClientState = status;
-
-  if (uv_read_start(req->handle, buf_alloc, pinger_read_cb)) {
-    FATAL("uv_read_start failed");
-  }
 }
 
 /**
@@ -118,6 +55,8 @@ SOCKET_API int clientSendMessage(const char *message, int len) {
 
   int ret = uv_write(&mWriteRequest, (uv_stream_t *)&mTcpClient, &buf, 1,
                      clientWriteCB);
+
+  //    LOG_I("client ret 1 %d",ret);
 
   if (ret != 0) {
     return FUN_SOCKET_CLIENT_SEND_MSG_ERROR;

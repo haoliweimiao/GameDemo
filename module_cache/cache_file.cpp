@@ -15,7 +15,7 @@ std::map<std::string, std::string> gCacheMap;
 void test_cache()
 {
     const char *queryKey = "test";
-    char *testValue = "testValue";
+    char testValue[128] = "testValue";
     cache_insert(queryKey, testValue);
     char query[1024];
     memset(query, '\0', 1);

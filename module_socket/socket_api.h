@@ -6,9 +6,10 @@
 #define REMOTEPROTOCOLMODULE_SOCKET_API_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
+
+#include <string.h>
 
 #define SOCKET_API
 
@@ -42,8 +43,13 @@ extern "C"
 #define SOCKET_MSG_PONG "pong"
 #define SOCKET_MSG_PONG_LEN 5
 
+/**
+ * 生成ping消息
+ */
+void createPingMessage(char *message);
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif //REMOTEPROTOCOLMODULE_SOCKET_API_H
+#endif // REMOTEPROTOCOLMODULE_SOCKET_API_H
