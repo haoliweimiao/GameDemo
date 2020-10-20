@@ -29,35 +29,30 @@
 #include <unistd.h>
 
 #ifndef SA_RESTART
-# define SA_RESTART 0
+#define SA_RESTART 0
 #endif
 
 typedef struct {
-  uv_signal_t* handle;
+  uv_signal_t *handle;
   int signum;
 } uv__signal_msg_t;
 
 RB_HEAD(uv__signal_tree_s, uv_signal_s);
 
-
 static int uv__signal_unlock(void);
-static int uv__signal_start(uv_signal_t* handle,
-                            uv_signal_cb signal_cb,
-                            int signum,
-                            int oneshot);
-static void uv__signal_event(uv_loop_t* loop, uv__io_t* w, unsigned int events);
-static int uv__signal_compare(uv_signal_t* w1, uv_signal_t* w2);
-static void uv__signal_stop(uv_signal_t* handle);
+static int uv__signal_start(uv_signal_t *handle, uv_signal_cb signal_cb,
+                            int signum, int oneshot);
+static void uv__signal_event(uv_loop_t *loop, uv__io_t *w, unsigned int events);
+static int uv__signal_compare(uv_signal_t *w1, uv_signal_t *w2);
+static void uv__signal_stop(uv_signal_t *handle);
 static void uv__signal_unregister_handler(int signum);
-
 
 static uv_once_t uv__signal_global_init_guard = UV_ONCE_INIT;
 static struct uv__signal_tree_s uv__signal_tree =
     RB_INITIALIZER(uv__signal_tree);
-static int uv__signal_lock_pipefd[2] = { -1, -1 };
+static int uv__signal_lock_pipefd[2] = {-1, -1};
 
-RB_GENERATE_STATIC(uv__signal_tree_s,
-                   uv_signal_s, tree_entry,
+RB_GENERATE_STATIC(uv__signal_tree_s, uv_signal_s, tree_entry,
                    uv__signal_compare)
 
 static void uv__signal_global_reinit(void);
@@ -75,7 +70,6 @@ static void uv__signal_global_init(void) {
 
   uv__signal_global_reinit();
 }
-
 
 void uv__signal_cleanup(void) {
   /* We can only use signal-safe functions here.
@@ -96,7 +90,6 @@ void uv__signal_cleanup(void) {
   }
 }
 
-
 static void uv__signal_global_reinit(void) {
   uv__signal_cleanup();
 
@@ -107,11 +100,9 @@ static void uv__signal_global_reinit(void) {
     abort();
 }
 
-
 void uv__signal_global_once_init(void) {
   uv_once(&uv__signal_global_init_guard, uv__signal_global_init);
 }
-
 
 static int uv__signal_lock(void) {
   int r;
@@ -124,7 +115,6 @@ static int uv__signal_lock(void) {
   return (r < 0) ? -1 : 0;
 }
 
-
 static int uv__signal_unlock(void) {
   int r;
   char data = 42;
@@ -136,8 +126,7 @@ static int uv__signal_unlock(void) {
   return (r < 0) ? -1 : 0;
 }
 
-
-static void uv__signal_block_and_lock(sigset_t* saved_sigmask) {
+static void uv__signal_block_and_lock(sigset_t *saved_sigmask) {
   sigset_t new_mask;
 
   if (sigfillset(&new_mask))
@@ -152,8 +141,7 @@ static void uv__signal_block_and_lock(sigset_t* saved_sigmask) {
     abort();
 }
 
-
-static void uv__signal_unlock_and_unblock(sigset_t* saved_sigmask) {
+static void uv__signal_unlock_and_unblock(sigset_t *saved_sigmask) {
   if (uv__signal_unlock())
     abort();
 
@@ -161,11 +149,10 @@ static void uv__signal_unlock_and_unblock(sigset_t* saved_sigmask) {
     abort();
 }
 
-
-static uv_signal_t* uv__signal_first_handle(int signum) {
+static uv_signal_t *uv__signal_first_handle(int signum) {
   /* This function must be called with the signal lock held. */
   uv_signal_t lookup;
-  uv_signal_t* handle;
+  uv_signal_t *handle;
 
   lookup.signum = signum;
   lookup.flags = 0;
@@ -179,10 +166,9 @@ static uv_signal_t* uv__signal_first_handle(int signum) {
   return NULL;
 }
 
-
 static void uv__signal_handler(int signum) {
   uv__signal_msg_t msg;
-  uv_signal_t* handle;
+  uv_signal_t *handle;
   int saved_errno;
 
   saved_errno = errno;
@@ -220,7 +206,6 @@ static void uv__signal_handler(int signum) {
   errno = saved_errno;
 }
 
-
 static int uv__signal_register_handler(int signum, int oneshot) {
   /* When this function is called, the signal lock must be held. */
   struct sigaction sa;
@@ -241,7 +226,6 @@ static int uv__signal_register_handler(int signum, int oneshot) {
   return 0;
 }
 
-
 static void uv__signal_unregister_handler(int signum) {
   /* When this function is called, the signal lock must be held. */
   struct sigaction sa;
@@ -257,8 +241,7 @@ static void uv__signal_unregister_handler(int signum) {
     abort();
 }
 
-
-static int uv__signal_loop_once_init(uv_loop_t* loop) {
+static int uv__signal_loop_once_init(uv_loop_t *loop) {
   int err;
 
   /* Return if already initialized. */
@@ -269,16 +252,14 @@ static int uv__signal_loop_once_init(uv_loop_t* loop) {
   if (err)
     return err;
 
-  uv__io_init(&loop->signal_io_watcher,
-              uv__signal_event,
+  uv__io_init(&loop->signal_io_watcher, uv__signal_event,
               loop->signal_pipefd[0]);
   uv__io_start(loop, &loop->signal_io_watcher, POLLIN);
 
   return 0;
 }
 
-
-int uv__signal_loop_fork(uv_loop_t* loop) {
+int uv__signal_loop_fork(uv_loop_t *loop) {
   uv__io_stop(loop, &loop->signal_io_watcher, POLLIN);
   uv__close(loop->signal_pipefd[0]);
   uv__close(loop->signal_pipefd[1]);
@@ -287,9 +268,8 @@ int uv__signal_loop_fork(uv_loop_t* loop) {
   return uv__signal_loop_once_init(loop);
 }
 
-
-void uv__signal_loop_cleanup(uv_loop_t* loop) {
-  QUEUE* q;
+void uv__signal_loop_cleanup(uv_loop_t *loop) {
+  QUEUE *q;
 
   /* Stop all the signal watchers that are still attached to this loop. This
    * ensures that the (shared) signal tree doesn't contain any invalid entries
@@ -298,10 +278,10 @@ void uv__signal_loop_cleanup(uv_loop_t* loop) {
    * queue are not modified by uv__signal_stop().
    */
   QUEUE_FOREACH(q, &loop->handle_queue) {
-    uv_handle_t* handle = QUEUE_DATA(q, uv_handle_t, handle_queue);
+    uv_handle_t *handle = QUEUE_DATA(q, uv_handle_t, handle_queue);
 
     if (handle->type == UV_SIGNAL)
-      uv__signal_stop((uv_signal_t*) handle);
+      uv__signal_stop((uv_signal_t *)handle);
   }
 
   if (loop->signal_pipefd[0] != -1) {
@@ -315,15 +295,14 @@ void uv__signal_loop_cleanup(uv_loop_t* loop) {
   }
 }
 
-
-int uv_signal_init(uv_loop_t* loop, uv_signal_t* handle) {
+int uv_signal_init(uv_loop_t *loop, uv_signal_t *handle) {
   int err;
 
   err = uv__signal_loop_once_init(loop);
   if (err)
     return err;
 
-  uv__handle_init(loop, (uv_handle_t*) handle, UV_SIGNAL);
+  uv__handle_init(loop, (uv_handle_t *)handle, UV_SIGNAL);
   handle->signum = 0;
   handle->caught_signals = 0;
   handle->dispatched_signals = 0;
@@ -331,31 +310,22 @@ int uv_signal_init(uv_loop_t* loop, uv_signal_t* handle) {
   return 0;
 }
 
+void uv__signal_close(uv_signal_t *handle) { uv__signal_stop(handle); }
 
-void uv__signal_close(uv_signal_t* handle) {
-  uv__signal_stop(handle);
-}
-
-
-int uv_signal_start(uv_signal_t* handle, uv_signal_cb signal_cb, int signum) {
+int uv_signal_start(uv_signal_t *handle, uv_signal_cb signal_cb, int signum) {
   return uv__signal_start(handle, signal_cb, signum, 0);
 }
 
-
-int uv_signal_start_oneshot(uv_signal_t* handle,
-                            uv_signal_cb signal_cb,
+int uv_signal_start_oneshot(uv_signal_t *handle, uv_signal_cb signal_cb,
                             int signum) {
   return uv__signal_start(handle, signal_cb, signum, 1);
 }
 
-
-static int uv__signal_start(uv_signal_t* handle,
-                            uv_signal_cb signal_cb,
-                            int signum,
-                            int oneshot) {
+static int uv__signal_start(uv_signal_t *handle, uv_signal_cb signal_cb,
+                            int signum, int oneshot) {
   sigset_t saved_sigmask;
   int err;
-  uv_signal_t* first_handle;
+  uv_signal_t *first_handle;
 
   assert(!uv__is_closing(handle));
 
@@ -412,12 +382,10 @@ static int uv__signal_start(uv_signal_t* handle,
   return 0;
 }
 
-
-static void uv__signal_event(uv_loop_t* loop,
-                             uv__io_t* w,
+static void uv__signal_event(uv_loop_t *loop, uv__io_t *w,
                              unsigned int events) {
-  uv__signal_msg_t* msg;
-  uv_signal_t* handle;
+  uv__signal_msg_t *msg;
+  uv_signal_t *handle;
   char buf[sizeof(uv__signal_msg_t) * 32];
   size_t bytes, end, i;
   int r;
@@ -453,7 +421,7 @@ static void uv__signal_event(uv_loop_t* loop,
     end = (bytes / sizeof(uv__signal_msg_t)) * sizeof(uv__signal_msg_t);
 
     for (i = 0; i < end; i += sizeof(uv__signal_msg_t)) {
-      msg = (uv__signal_msg_t*) (buf + i);
+      msg = (uv__signal_msg_t *)(buf + i);
       handle = msg->handle;
 
       if (msg->signum == handle->signum) {
@@ -479,48 +447,53 @@ static void uv__signal_event(uv_loop_t* loop,
   } while (end == sizeof buf);
 }
 
-
-static int uv__signal_compare(uv_signal_t* w1, uv_signal_t* w2) {
+static int uv__signal_compare(uv_signal_t *w1, uv_signal_t *w2) {
   int f1;
   int f2;
   /* Compare signums first so all watchers with the same signnum end up
    * adjacent.
    */
-  if (w1->signum < w2->signum) return -1;
-  if (w1->signum > w2->signum) return 1;
+  if (w1->signum < w2->signum)
+    return -1;
+  if (w1->signum > w2->signum)
+    return 1;
 
   /* Handlers without UV_SIGNAL_ONE_SHOT set will come first, so if the first
    * handler returned is a one-shot handler, the rest will be too.
    */
   f1 = w1->flags & UV_SIGNAL_ONE_SHOT;
   f2 = w2->flags & UV_SIGNAL_ONE_SHOT;
-  if (f1 < f2) return -1;
-  if (f1 > f2) return 1;
+  if (f1 < f2)
+    return -1;
+  if (f1 > f2)
+    return 1;
 
   /* Sort by loop pointer, so we can easily look up the first item after
    * { .signum = x, .loop = NULL }.
    */
-  if (w1->loop < w2->loop) return -1;
-  if (w1->loop > w2->loop) return 1;
+  if (w1->loop < w2->loop)
+    return -1;
+  if (w1->loop > w2->loop)
+    return 1;
 
-  if (w1 < w2) return -1;
-  if (w1 > w2) return 1;
+  if (w1 < w2)
+    return -1;
+  if (w1 > w2)
+    return 1;
 
   return 0;
 }
 
-
-int uv_signal_stop(uv_signal_t* handle) {
+int uv_signal_stop(uv_signal_t *handle) {
   assert(!uv__is_closing(handle));
   uv__signal_stop(handle);
   return 0;
 }
 
-
-static void uv__signal_stop(uv_signal_t* handle) {
-  uv_signal_t* removed_handle;
+static void uv__signal_stop(uv_signal_t *handle) {
+  uv_signal_t *removed_handle;
   sigset_t saved_sigmask;
-  uv_signal_t* first_handle;
+  uv_signal_t *first_handle;
   int rem_oneshot;
   int first_oneshot;
   int ret;
@@ -533,7 +506,7 @@ static void uv__signal_stop(uv_signal_t* handle) {
 
   removed_handle = RB_REMOVE(uv__signal_tree_s, &uv__signal_tree, handle);
   assert(removed_handle == handle);
-  (void) removed_handle;
+  (void)removed_handle;
 
   /* Check if there are other active signal watchers observing this signal. If
    * not, unregister the signal handler.

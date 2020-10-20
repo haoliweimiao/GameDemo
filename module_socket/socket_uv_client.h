@@ -2,22 +2,21 @@
 #define socket_uv_client_h
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "socket_api.h"
 
-    /**
-     * init client
-     */
-    SOCKET_API int initClient();
-    /**
-     * client send message
-     * @params message: send message
-     * @params len:     send message lenght
-     */
-    SOCKET_API int clientSendMessage(const char *message, int len);
+/**
+ * init client
+ */
+SOCKET_API int initClient();
+/**
+ * client send message
+ * @params message: send message
+ * @params len:     send message lenght
+ */
+SOCKET_API int clientSendMessage(const char *message, int len);
 
 #ifdef __cplusplus
 }

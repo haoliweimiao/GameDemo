@@ -22,41 +22,36 @@
 #include "internal.h"
 
 #include <assert.h>
-#include <string.h>
 #include <errno.h>
+#include <string.h>
 
+#include <fcntl.h>
 #include <paths.h>
-#include <sys/user.h>
-#include <sys/types.h>
+#include <stdlib.h>
 #include <sys/resource.h>
 #include <sys/sysctl.h>
-#include <vm/vm_param.h> /* VM_LOADAVG */
+#include <sys/types.h>
+#include <sys/user.h>
 #include <time.h>
-#include <stdlib.h>
-#include <unistd.h> /* sysconf */
-#include <fcntl.h>
+#include <unistd.h>      /* sysconf */
+#include <vm/vm_param.h> /* VM_LOADAVG */
 
 #ifndef CPUSTATES
-# define CPUSTATES 5U
+#define CPUSTATES 5U
 #endif
 #ifndef CP_USER
-# define CP_USER 0
-# define CP_NICE 1
-# define CP_SYS 2
-# define CP_IDLE 3
-# define CP_INTR 4
+#define CP_USER 0
+#define CP_NICE 1
+#define CP_SYS 2
+#define CP_IDLE 3
+#define CP_INTR 4
 #endif
 
+int uv__platform_loop_init(uv_loop_t *loop) { return uv__kqueue_init(loop); }
 
-int uv__platform_loop_init(uv_loop_t* loop) {
-  return uv__kqueue_init(loop);
-}
+void uv__platform_loop_delete(uv_loop_t *loop) {}
 
-
-void uv__platform_loop_delete(uv_loop_t* loop) {
-}
-
-int uv_exepath(char* buffer, size_t* size) {
+int uv_exepath(char *buffer, size_t *size) {
   char abspath[PATH_MAX * 2 + 1];
   int mib[4];
   size_t abspath_size;
@@ -93,10 +88,8 @@ uint64_t uv_get_free_memory(void) {
   if (sysctlbyname("vm.stats.vm.v_free_count", &freecount, &size, NULL, 0))
     return UV__ERR(errno);
 
-  return (uint64_t) freecount * sysconf(_SC_PAGESIZE);
-
+  return (uint64_t)freecount * sysconf(_SC_PAGESIZE);
 }
-
 
 uint64_t uv_get_total_memory(void) {
   unsigned long info;
@@ -107,29 +100,27 @@ uint64_t uv_get_total_memory(void) {
   if (sysctl(which, ARRAY_SIZE(which), &info, &size, NULL, 0))
     return UV__ERR(errno);
 
-  return (uint64_t) info;
+  return (uint64_t)info;
 }
-
 
 uint64_t uv_get_constrained_memory(void) {
-  return 0;  /* Memory constraints are unknown. */
+  return 0; /* Memory constraints are unknown. */
 }
-
 
 void uv_loadavg(double avg[3]) {
   struct loadavg info;
   size_t size = sizeof(info);
   int which[] = {CTL_VM, VM_LOADAVG};
 
-  if (sysctl(which, ARRAY_SIZE(which), &info, &size, NULL, 0) < 0) return;
+  if (sysctl(which, ARRAY_SIZE(which), &info, &size, NULL, 0) < 0)
+    return;
 
-  avg[0] = (double) info.ldavg[0] / info.fscale;
-  avg[1] = (double) info.ldavg[1] / info.fscale;
-  avg[2] = (double) info.ldavg[2] / info.fscale;
+  avg[0] = (double)info.ldavg[0] / info.fscale;
+  avg[1] = (double)info.ldavg[1] / info.fscale;
+  avg[2] = (double)info.ldavg[2] / info.fscale;
 }
 
-
-int uv_resident_set_memory(size_t* rss) {
+int uv_resident_set_memory(size_t *rss) {
   struct kinfo_proc kinfo;
   size_t page_size;
   size_t kinfo_size;
@@ -156,8 +147,7 @@ int uv_resident_set_memory(size_t* rss) {
   return 0;
 }
 
-
-int uv_uptime(double* uptime) {
+int uv_uptime(double *uptime) {
   int r;
   struct timespec sp;
   r = clock_gettime(CLOCK_MONOTONIC, &sp);
@@ -168,17 +158,16 @@ int uv_uptime(double* uptime) {
   return 0;
 }
 
-
-int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
+int uv_cpu_info(uv_cpu_info_t **cpu_infos, int *count) {
   unsigned int ticks = (unsigned int)sysconf(_SC_CLK_TCK),
                multiplier = ((uint64_t)1000L / ticks), cpuspeed, maxcpus,
                cur = 0;
-  uv_cpu_info_t* cpu_info;
-  const char* maxcpus_key;
-  const char* cptimes_key;
-  const char* model_key;
+  uv_cpu_info_t *cpu_info;
+  const char *maxcpus_key;
+  const char *cptimes_key;
+  const char *model_key;
   char model[512];
-  long* cp_times;
+  long *cp_times;
   int numcpus;
   size_t size;
   int i;
@@ -247,24 +236,23 @@ int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
   for (i = 0; i < numcpus; i++) {
     cpu_info = &(*cpu_infos)[i];
 
-    cpu_info->cpu_times.user = (uint64_t)(cp_times[CP_USER+cur]) * multiplier;
-    cpu_info->cpu_times.nice = (uint64_t)(cp_times[CP_NICE+cur]) * multiplier;
-    cpu_info->cpu_times.sys = (uint64_t)(cp_times[CP_SYS+cur]) * multiplier;
-    cpu_info->cpu_times.idle = (uint64_t)(cp_times[CP_IDLE+cur]) * multiplier;
-    cpu_info->cpu_times.irq = (uint64_t)(cp_times[CP_INTR+cur]) * multiplier;
+    cpu_info->cpu_times.user = (uint64_t)(cp_times[CP_USER + cur]) * multiplier;
+    cpu_info->cpu_times.nice = (uint64_t)(cp_times[CP_NICE + cur]) * multiplier;
+    cpu_info->cpu_times.sys = (uint64_t)(cp_times[CP_SYS + cur]) * multiplier;
+    cpu_info->cpu_times.idle = (uint64_t)(cp_times[CP_IDLE + cur]) * multiplier;
+    cpu_info->cpu_times.irq = (uint64_t)(cp_times[CP_INTR + cur]) * multiplier;
 
     cpu_info->model = uv__strdup(model);
     cpu_info->speed = cpuspeed;
 
-    cur+=CPUSTATES;
+    cur += CPUSTATES;
   }
 
   uv__free(cp_times);
   return 0;
 }
 
-
-int uv__sendmmsg(int fd, struct uv__mmsghdr* mmsg, unsigned int vlen) {
+int uv__sendmmsg(int fd, struct uv__mmsghdr *mmsg, unsigned int vlen) {
 #if __FreeBSD__ >= 11
   return sendmmsg(fd, mmsg, vlen, /* flags */ 0);
 #else
@@ -272,8 +260,7 @@ int uv__sendmmsg(int fd, struct uv__mmsghdr* mmsg, unsigned int vlen) {
 #endif
 }
 
-
-int uv__recvmmsg(int fd, struct uv__mmsghdr* mmsg, unsigned int vlen) {
+int uv__recvmmsg(int fd, struct uv__mmsghdr *mmsg, unsigned int vlen) {
 #if __FreeBSD__ >= 11
   return recvmmsg(fd, mmsg, vlen, 0 /* flags */, NULL /* timeout */);
 #else

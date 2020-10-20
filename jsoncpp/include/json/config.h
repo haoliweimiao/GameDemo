@@ -58,8 +58,8 @@
 #if defined(_MSC_VER) && _MSC_VER < 1900
 // As recommended at
 // https://stackoverflow.com/questions/2915672/snprintf-and-visual-studio-2010
-extern JSON_API int msvc_pre1900_c99_snprintf(char* outBuf, size_t size,
-                                              const char* format, ...);
+extern JSON_API int msvc_pre1900_c99_snprintf(char *outBuf, size_t size,
+                                              const char *format, ...);
 #define jsoncpp_snprintf msvc_pre1900_c99_snprintf
 #else
 #define jsoncpp_snprintf std::snprintf
@@ -85,7 +85,7 @@ extern JSON_API int msvc_pre1900_c99_snprintf(char* outBuf, size_t size,
 #define JSONCPP_DEPRECATED(message) __attribute__((__deprecated__))
 #endif                  // GNUC version
 #elif defined(_MSC_VER) // MSVC (after clang because clang on Windows emulates
-                        // MSVC)
+// MSVC)
 #define JSONCPP_DEPRECATED(message) __declspec(deprecated(message))
 #endif // __clang__ || __GNUC__ || _MSC_VER
 
@@ -119,7 +119,7 @@ using UInt64 = unsigned __int64;
 #else                 // if defined(_MSC_VER) // Other platforms, use long long
 using Int64 = int64_t;
 using UInt64 = uint64_t;
-#endif                // if defined(_MSC_VER)
+#endif // if defined(_MSC_VER)
 using LargestInt = Int64;
 using LargestUInt = UInt64;
 #define JSON_HAS_INT64

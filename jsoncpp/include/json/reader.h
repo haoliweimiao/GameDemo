@@ -37,7 +37,7 @@ class JSONCPP_DEPRECATED(
     "Use CharReader and CharReaderBuilder instead.") JSON_API Reader {
 public:
   using Char = char;
-  using Location = const Char*;
+  using Location = const Char *;
 
   /** \brief An error tagged with where in the JSON text it was encountered.
    *
@@ -58,7 +58,7 @@ public:
   /** \brief Constructs a Reader allowing the specified feature set for parsing.
    */
   JSONCPP_DEPRECATED("Use CharReader and CharReaderBuilder instead")
-  Reader(const Features& features);
+  Reader(const Features &features);
 
   /** \brief Read a Value from a <a HREF="http://www.json.org">JSON</a>
    * document.
@@ -74,7 +74,7 @@ public:
    * \return \c true if the document was successfully parsed, \c false if an
    * error occurred.
    */
-  bool parse(const std::string& document, Value& root,
+  bool parse(const std::string &document, Value &root,
              bool collectComments = true);
 
   /** \brief Read a Value from a <a HREF="http://www.json.org">JSON</a>
@@ -93,12 +93,12 @@ public:
    * \return \c true if the document was successfully parsed, \c false if an
    * error occurred.
    */
-  bool parse(const char* beginDoc, const char* endDoc, Value& root,
+  bool parse(const char *beginDoc, const char *endDoc, Value &root,
              bool collectComments = true);
 
   /// \brief Parse from input stream.
   /// \see Json::operator>>(std::istream&, Json::Value&).
-  bool parse(IStream& is, Value& root, bool collectComments = true);
+  bool parse(IStream &is, Value &root, bool collectComments = true);
 
   /** \brief Returns a user friendly string that list errors in the parsed
    * document.
@@ -136,7 +136,7 @@ public:
    * \return \c true if the error was successfully added, \c false if the Value
    * offset exceeds the document size.
    */
-  bool pushError(const Value& value, const String& message);
+  bool pushError(const Value &value, const String &message);
 
   /** \brief Add a semantic error message with extra context.
    *
@@ -146,7 +146,7 @@ public:
    * \return \c true if the error was successfully added, \c false if either
    * Value offset exceeds the document size.
    */
-  bool pushError(const Value& value, const String& message, const Value& extra);
+  bool pushError(const Value &value, const String &message, const Value &extra);
 
   /** \brief Return whether there are any errors.
    *
@@ -189,44 +189,44 @@ private:
 
   using Errors = std::deque<ErrorInfo>;
 
-  bool readToken(Token& token);
+  bool readToken(Token &token);
   void skipSpaces();
-  bool match(const Char* pattern, int patternLength);
+  bool match(const Char *pattern, int patternLength);
   bool readComment();
   bool readCStyleComment();
   bool readCppStyleComment();
   bool readString();
   void readNumber();
   bool readValue();
-  bool readObject(Token& token);
-  bool readArray(Token& token);
-  bool decodeNumber(Token& token);
-  bool decodeNumber(Token& token, Value& decoded);
-  bool decodeString(Token& token);
-  bool decodeString(Token& token, String& decoded);
-  bool decodeDouble(Token& token);
-  bool decodeDouble(Token& token, Value& decoded);
-  bool decodeUnicodeCodePoint(Token& token, Location& current, Location end,
-                              unsigned int& unicode);
-  bool decodeUnicodeEscapeSequence(Token& token, Location& current,
-                                   Location end, unsigned int& unicode);
-  bool addError(const String& message, Token& token, Location extra = nullptr);
+  bool readObject(Token &token);
+  bool readArray(Token &token);
+  bool decodeNumber(Token &token);
+  bool decodeNumber(Token &token, Value &decoded);
+  bool decodeString(Token &token);
+  bool decodeString(Token &token, String &decoded);
+  bool decodeDouble(Token &token);
+  bool decodeDouble(Token &token, Value &decoded);
+  bool decodeUnicodeCodePoint(Token &token, Location &current, Location end,
+                              unsigned int &unicode);
+  bool decodeUnicodeEscapeSequence(Token &token, Location &current,
+                                   Location end, unsigned int &unicode);
+  bool addError(const String &message, Token &token, Location extra = nullptr);
   bool recoverFromError(TokenType skipUntilToken);
-  bool addErrorAndRecover(const String& message, Token& token,
+  bool addErrorAndRecover(const String &message, Token &token,
                           TokenType skipUntilToken);
   void skipUntilSpace();
-  Value& currentValue();
+  Value &currentValue();
   Char getNextChar();
-  void getLocationLineAndColumn(Location location, int& line,
-                                int& column) const;
+  void getLocationLineAndColumn(Location location, int &line,
+                                int &column) const;
   String getLocationLineAndColumn(Location location) const;
   void addComment(Location begin, Location end, CommentPlacement placement);
-  void skipCommentTokens(Token& token);
+  void skipCommentTokens(Token &token);
 
   static bool containsNewLine(Location begin, Location end);
   static String normalizeEOL(Location begin, Location end);
 
-  using Nodes = std::stack<Value*>;
+  using Nodes = std::stack<Value *>;
   Nodes nodes_;
   Errors errors_;
   String document_;
@@ -234,7 +234,7 @@ private:
   Location end_{};
   Location current_{};
   Location lastValueEnd_{};
-  Value* lastValue_{};
+  Value *lastValue_{};
   String commentsBefore_;
   Features features_;
   bool collectComments_{};
@@ -261,8 +261,8 @@ public:
    * \return \c true if the document was successfully parsed, \c false if an
    * error occurred.
    */
-  virtual bool parse(char const* beginDoc, char const* endDoc, Value* root,
-                     String* errs) = 0;
+  virtual bool parse(char const *beginDoc, char const *endDoc, Value *root,
+                     String *errs) = 0;
 
   class JSON_API Factory {
   public:
@@ -270,7 +270,7 @@ public:
     /** \brief Allocate a CharReader via operator new().
      * \throw std::exception if something goes wrong (e.g. invalid settings)
      */
-    virtual CharReader* newCharReader() const = 0;
+    virtual CharReader *newCharReader() const = 0;
   }; // Factory
 };   // CharReader
 
@@ -334,37 +334,37 @@ public:
   CharReaderBuilder();
   ~CharReaderBuilder() override;
 
-  CharReader* newCharReader() const override;
+  CharReader *newCharReader() const override;
 
   /** \return true if 'settings' are legal and consistent;
    *   otherwise, indicate bad settings via 'invalid'.
    */
-  bool validate(Json::Value* invalid) const;
+  bool validate(Json::Value *invalid) const;
 
   /** A simple way to update a specific setting.
    */
-  Value& operator[](const String& key);
+  Value &operator[](const String &key);
 
   /** Called by ctor, but you can use this to reset settings_.
    * \pre 'settings' != NULL (but Json::null is fine)
    * \remark Defaults:
    * \snippet src/lib_json/json_reader.cpp CharReaderBuilderDefaults
    */
-  static void setDefaults(Json::Value* settings);
+  static void setDefaults(Json::Value *settings);
   /** Same as old Features::strictMode().
    * \pre 'settings' != NULL (but Json::null is fine)
    * \remark Defaults:
    * \snippet src/lib_json/json_reader.cpp CharReaderBuilderStrictMode
    */
-  static void strictMode(Json::Value* settings);
+  static void strictMode(Json::Value *settings);
 };
 
 /** Consume entire stream and use its begin/end.
  * Someday we might have a real StreamReader, but for now this
  * is convenient.
  */
-bool JSON_API parseFromStream(CharReader::Factory const&, IStream&, Value* root,
-                              String* errs);
+bool JSON_API parseFromStream(CharReader::Factory const &, IStream &,
+                              Value *root, String *errs);
 
 /** \brief Read from 'sin' into 'root'.
  *
@@ -390,7 +390,7 @@ bool JSON_API parseFromStream(CharReader::Factory const&, IStream&, Value* root,
  * \throw std::exception on parse error.
  * \see Json::operator<<()
  */
-JSON_API IStream& operator>>(IStream&, Value&);
+JSON_API IStream &operator>>(IStream &, Value &);
 
 } // namespace Json
 

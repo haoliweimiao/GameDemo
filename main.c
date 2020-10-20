@@ -8,15 +8,15 @@
 
 int main() {
 
-//    system("clear");
-//
-//    init_task_exec();
-//
-//    show_view_start();
-//
-//    startServer$Client();
+  //    system("clear");
+  //
+  //    init_task_exec();
+  //
+  //    show_view_start();
+  //
+  //    startServer$Client();
 
-    demo_idle_basic();
+  demo_idle_basic();
 
-return 0;
+  return 0;
 }

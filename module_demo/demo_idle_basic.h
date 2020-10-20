@@ -9,8 +9,7 @@
 #define demo_idle_basic_h
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
@@ -21,6 +20,5 @@ void demo_idle_basic();
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif /* demo_idle_basic_h */

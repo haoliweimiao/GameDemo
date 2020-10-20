@@ -2,16 +2,15 @@
 #define socket_uv_server_h
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "socket_api.h"
 
-    /**
-     * uv socket demo
-     */
-    SOCKET_API int startUvSocketServer();
+/**
+ * uv socket demo
+ */
+SOCKET_API int startUvSocketServer();
 
 #ifdef __cplusplus
 }

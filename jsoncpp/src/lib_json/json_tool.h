@@ -30,7 +30,7 @@ static inline char getDecimalPoint() {
 #ifdef JSONCPP_NO_LOCALE_SUPPORT
   return '\0';
 #else
-  struct lconv* lc = localeconv();
+  struct lconv *lc = localeconv();
   return lc ? *(lc->decimal_point) : '\0';
 #endif
 }
@@ -78,7 +78,7 @@ using UIntToStringBuffer = char[uintToStringBufferSize];
  * @param current Input/Output string buffer.
  *        Must have at least uintToStringBufferSize chars free.
  */
-static inline void uintToString(LargestUInt value, char*& current) {
+static inline void uintToString(LargestUInt value, char *&current) {
   *--current = 0;
   do {
     *--current = static_cast<char>(value % 10U + static_cast<unsigned>('0'));

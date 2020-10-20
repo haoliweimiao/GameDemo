@@ -29,16 +29,15 @@
 #include <crtdbg.h>
 #endif
 
-#include "uv.h"
-#include "internal.h"
-#include "queue.h"
 #include "handle-inl.h"
 #include "heap-inl.h"
+#include "internal.h"
+#include "queue.h"
 #include "req-inl.h"
+#include "uv.h"
 
 /* uv_once initialization guards */
 static uv_once_t uv_init_guard_ = UV_ONCE_INIT;
-
 
 #if defined(_DEBUG) && (defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR))
 /* Our crt debug report handler allows us to temporarily disable asserts
@@ -47,7 +46,8 @@ static uv_once_t uv_init_guard_ = UV_ONCE_INIT;
 
 UV_THREAD_LOCAL int uv__crt_assert_enabled = TRUE;
 
-static int uv__crt_dbg_report_handler(int report_type, char *message, int *ret_val) {
+static int uv__crt_dbg_report_handler(int report_type, char *message,
+                                      int *ret_val) {
   if (uv__crt_assert_enabled || report_type != _CRT_ASSERT)
     return FALSE;
 
@@ -56,7 +56,7 @@ static int uv__crt_dbg_report_handler(int report_type, char *message, int *ret_v
      * Set ret_val to 1 to trigger a breakpoint.
     */
 
-    if(IsDebuggerPresent())
+    if (IsDebuggerPresent())
       *ret_val = 1;
     else
       *ret_val = 0;
@@ -69,34 +69,33 @@ static int uv__crt_dbg_report_handler(int report_type, char *message, int *ret_v
 UV_THREAD_LOCAL int uv__crt_assert_enabled = FALSE;
 #endif
 
-
 #if !defined(__MINGW32__) || __MSVCRT_VERSION__ >= 0x800
-static void uv__crt_invalid_parameter_handler(const wchar_t* expression,
-    const wchar_t* function, const wchar_t * file, unsigned int line,
-    uintptr_t reserved) {
+static void uv__crt_invalid_parameter_handler(const wchar_t *expression,
+                                              const wchar_t *function,
+                                              const wchar_t *file,
+                                              unsigned int line,
+                                              uintptr_t reserved) {
   /* No-op. */
 }
 #endif
 
-static uv_loop_t** uv__loops;
+static uv_loop_t **uv__loops;
 static int uv__loops_size;
 static int uv__loops_capacity;
 #define UV__LOOPS_CHUNK_SIZE 8
 static uv_mutex_t uv__loops_lock;
 
-static void uv__loops_init(void) {
-  uv_mutex_init(&uv__loops_lock);
-}
+static void uv__loops_init(void) { uv_mutex_init(&uv__loops_lock); }
 
-static int uv__loops_add(uv_loop_t* loop) {
-  uv_loop_t** new_loops;
+static int uv__loops_add(uv_loop_t *loop) {
+  uv_loop_t **new_loops;
   int new_capacity, i;
 
   uv_mutex_lock(&uv__loops_lock);
 
   if (uv__loops_size == uv__loops_capacity) {
     new_capacity = uv__loops_capacity + UV__LOOPS_CHUNK_SIZE;
-    new_loops = uv__realloc(uv__loops, sizeof(uv_loop_t*) * new_capacity);
+    new_loops = uv__realloc(uv__loops, sizeof(uv_loop_t *) * new_capacity);
     if (!new_loops)
       goto failed_loops_realloc;
     uv__loops = new_loops;
@@ -115,10 +114,10 @@ failed_loops_realloc:
   return ERROR_OUTOFMEMORY;
 }
 
-static void uv__loops_remove(uv_loop_t* loop) {
+static void uv__loops_remove(uv_loop_t *loop) {
   int loop_index;
   int smaller_capacity;
-  uv_loop_t** new_loops;
+  uv_loop_t **new_loops;
 
   uv_mutex_lock(&uv__loops_lock);
 
@@ -149,7 +148,7 @@ static void uv__loops_remove(uv_loop_t* loop) {
   smaller_capacity = uv__loops_capacity / 2;
   if (uv__loops_size >= smaller_capacity)
     goto loop_removed;
-  new_loops = uv__realloc(uv__loops, sizeof(uv_loop_t*) * smaller_capacity);
+  new_loops = uv__realloc(uv__loops, sizeof(uv_loop_t *) * smaller_capacity);
   if (!new_loops)
     goto loop_removed;
   uv__loops = new_loops;
@@ -161,7 +160,7 @@ loop_removed:
 
 void uv__wake_all_loops(void) {
   int i;
-  uv_loop_t* loop;
+  uv_loop_t *loop;
 
   uv_mutex_lock(&uv__loops_lock);
   for (i = 0; i < uv__loops_size; ++i) {
@@ -178,17 +177,17 @@ static void uv_init(void) {
   SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX |
                SEM_NOOPENFILEERRORBOX);
 
-  /* Tell the CRT to not exit the application when an invalid parameter is
-   * passed. The main issue is that invalid FDs will trigger this behavior.
-   */
+/* Tell the CRT to not exit the application when an invalid parameter is
+ * passed. The main issue is that invalid FDs will trigger this behavior.
+ */
 #if !defined(__MINGW32__) || __MSVCRT_VERSION__ >= 0x800
   _set_invalid_parameter_handler(uv__crt_invalid_parameter_handler);
 #endif
 
-  /* We also need to setup our debug report handler because some CRT
-   * functions (eg _get_osfhandle) raise an assert when called with invalid
-   * FDs even though they return the proper error code in the release build.
-   */
+/* We also need to setup our debug report handler because some CRT
+ * functions (eg _get_osfhandle) raise an assert when called with invalid
+ * FDs even though they return the proper error code in the release build.
+ */
 #if defined(_DEBUG) && (defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR))
   _CrtSetReportHook(uv__crt_dbg_report_handler);
 #endif
@@ -220,10 +219,9 @@ static void uv_init(void) {
   uv__init_detect_system_wakeup();
 }
 
-
-int uv_loop_init(uv_loop_t* loop) {
-  uv__loop_internal_fields_t* lfields;
-  struct heap* timer_heap;
+int uv_loop_init(uv_loop_t *loop) {
+  uv__loop_internal_fields_t *lfields;
+  struct heap *timer_heap;
   int err;
 
   /* Initialize libuv itself first */
@@ -234,7 +232,7 @@ int uv_loop_init(uv_loop_t* loop) {
   if (loop->iocp == NULL)
     return uv_translate_sys_error(GetLastError());
 
-  lfields = (uv__loop_internal_fields_t*) uv__calloc(1, sizeof(*lfields));
+  lfields = (uv__loop_internal_fields_t *)uv__calloc(1, sizeof(*lfields));
   if (lfields == NULL)
     return UV_ENOMEM;
   loop->internal_fields = lfields;
@@ -318,21 +316,16 @@ fail_metrics_mutex_init:
   return err;
 }
 
-
-void uv_update_time(uv_loop_t* loop) {
+void uv_update_time(uv_loop_t *loop) {
   uint64_t new_time = uv__hrtime(1000);
   assert(new_time >= loop->time);
   loop->time = new_time;
 }
 
+void uv__once_init(void) { uv_once(&uv_init_guard_, uv_init); }
 
-void uv__once_init(void) {
-  uv_once(&uv_init_guard_, uv_init);
-}
-
-
-void uv__loop_close(uv_loop_t* loop) {
-  uv__loop_internal_fields_t* lfields;
+void uv__loop_close(uv_loop_t *loop) {
+  uv__loop_internal_fields_t *lfields;
   size_t i;
 
   uv__loops_remove(loop);
@@ -371,9 +364,8 @@ void uv__loop_close(uv_loop_t* loop) {
   CloseHandle(loop->iocp);
 }
 
-
-int uv__loop_configure(uv_loop_t* loop, uv_loop_option option, va_list ap) {
-  uv__loop_internal_fields_t* lfields;
+int uv__loop_configure(uv_loop_t *loop, uv_loop_option option, va_list ap) {
+  uv__loop_internal_fields_t *lfields;
 
   lfields = uv__get_internal_fields(loop);
   if (option == UV_METRICS_IDLE_TIME) {
@@ -384,18 +376,11 @@ int uv__loop_configure(uv_loop_t* loop, uv_loop_option option, va_list ap) {
   return UV_ENOSYS;
 }
 
+int uv_backend_fd(const uv_loop_t *loop) { return -1; }
 
-int uv_backend_fd(const uv_loop_t* loop) {
-  return -1;
-}
+int uv_loop_fork(uv_loop_t *loop) { return UV_ENOSYS; }
 
-
-int uv_loop_fork(uv_loop_t* loop) {
-  return UV_ENOSYS;
-}
-
-
-int uv_backend_timeout(const uv_loop_t* loop) {
+int uv_backend_timeout(const uv_loop_t *loop) {
   if (loop->stop_flag != 0)
     return 0;
 
@@ -414,12 +399,11 @@ int uv_backend_timeout(const uv_loop_t* loop) {
   return uv__next_timeout(loop);
 }
 
-
-static void uv__poll_wine(uv_loop_t* loop, DWORD timeout) {
+static void uv__poll_wine(uv_loop_t *loop, DWORD timeout) {
   DWORD bytes;
   ULONG_PTR key;
-  OVERLAPPED* overlapped;
-  uv_req_t* req;
+  OVERLAPPED *overlapped;
+  uv_req_t *req;
   int repeat;
   uint64_t timeout_time;
   uint64_t user_timeout;
@@ -435,18 +419,14 @@ static void uv__poll_wine(uv_loop_t* loop, DWORD timeout) {
     reset_timeout = 0;
   }
 
-  for (repeat = 0; ; repeat++) {
+  for (repeat = 0;; repeat++) {
     /* Only need to set the provider_entry_time if timeout != 0. The function
      * will return early if the loop isn't configured with UV_METRICS_IDLE_TIME.
      */
     if (timeout != 0)
       uv__metrics_set_provider_entry_time(loop);
 
-    GetQueuedCompletionStatus(loop->iocp,
-                              &bytes,
-                              &key,
-                              &overlapped,
-                              timeout);
+    GetQueuedCompletionStatus(loop->iocp, &bytes, &key, &overlapped, timeout);
 
     if (reset_timeout != 0) {
       timeout = user_timeout;
@@ -493,10 +473,9 @@ static void uv__poll_wine(uv_loop_t* loop, DWORD timeout) {
   }
 }
 
-
-static void uv__poll(uv_loop_t* loop, DWORD timeout) {
+static void uv__poll(uv_loop_t *loop, DWORD timeout) {
   BOOL success;
-  uv_req_t* req;
+  uv_req_t *req;
   OVERLAPPED_ENTRY overlappeds[128];
   ULONG count;
   ULONG i;
@@ -515,19 +494,16 @@ static void uv__poll(uv_loop_t* loop, DWORD timeout) {
     reset_timeout = 0;
   }
 
-  for (repeat = 0; ; repeat++) {
+  for (repeat = 0;; repeat++) {
     /* Only need to set the provider_entry_time if timeout != 0. The function
      * will return early if the loop isn't configured with UV_METRICS_IDLE_TIME.
      */
     if (timeout != 0)
       uv__metrics_set_provider_entry_time(loop);
 
-    success = pGetQueuedCompletionStatusEx(loop->iocp,
-                                           overlappeds,
-                                           ARRAY_SIZE(overlappeds),
-                                           &count,
-                                           timeout,
-                                           FALSE);
+    success = pGetQueuedCompletionStatusEx(loop->iocp, overlappeds,
+                                           ARRAY_SIZE(overlappeds), &count,
+                                           timeout, FALSE);
 
     if (reset_timeout != 0) {
       timeout = user_timeout;
@@ -580,18 +556,12 @@ static void uv__poll(uv_loop_t* loop, DWORD timeout) {
   }
 }
 
-
-static int uv__loop_alive(const uv_loop_t* loop) {
-  return uv__has_active_handles(loop) ||
-         uv__has_active_reqs(loop) ||
+static int uv__loop_alive(const uv_loop_t *loop) {
+  return uv__has_active_handles(loop) || uv__has_active_reqs(loop) ||
          loop->endgame_handles != NULL;
 }
 
-
-int uv_loop_alive(const uv_loop_t* loop) {
-    return uv__loop_alive(loop);
-}
-
+int uv_loop_alive(const uv_loop_t *loop) { return uv__loop_alive(loop); }
 
 int uv_run(uv_loop_t *loop, uv_run_mode mode) {
   DWORD timeout;
@@ -655,29 +625,28 @@ int uv_run(uv_loop_t *loop, uv_run_mode mode) {
   return r;
 }
 
-
-int uv_fileno(const uv_handle_t* handle, uv_os_fd_t* fd) {
+int uv_fileno(const uv_handle_t *handle, uv_os_fd_t *fd) {
   uv_os_fd_t fd_out;
 
   switch (handle->type) {
   case UV_TCP:
-    fd_out = (uv_os_fd_t)((uv_tcp_t*) handle)->socket;
+    fd_out = (uv_os_fd_t)((uv_tcp_t *)handle)->socket;
     break;
 
   case UV_NAMED_PIPE:
-    fd_out = ((uv_pipe_t*) handle)->handle;
+    fd_out = ((uv_pipe_t *)handle)->handle;
     break;
 
   case UV_TTY:
-    fd_out = ((uv_tty_t*) handle)->handle;
+    fd_out = ((uv_tty_t *)handle)->handle;
     break;
 
   case UV_UDP:
-    fd_out = (uv_os_fd_t)((uv_udp_t*) handle)->socket;
+    fd_out = (uv_os_fd_t)((uv_udp_t *)handle)->socket;
     break;
 
   case UV_POLL:
-    fd_out = (uv_os_fd_t)((uv_poll_t*) handle)->socket;
+    fd_out = (uv_os_fd_t)((uv_poll_t *)handle)->socket;
     break;
 
   default:
@@ -691,8 +660,7 @@ int uv_fileno(const uv_handle_t* handle, uv_os_fd_t* fd) {
   return 0;
 }
 
-
-int uv__socket_sockopt(uv_handle_t* handle, int optname, int* value) {
+int uv__socket_sockopt(uv_handle_t *handle, int optname, int *value) {
   int r;
   int len;
   SOCKET socket;
@@ -701,18 +669,18 @@ int uv__socket_sockopt(uv_handle_t* handle, int optname, int* value) {
     return UV_EINVAL;
 
   if (handle->type == UV_TCP)
-    socket = ((uv_tcp_t*) handle)->socket;
+    socket = ((uv_tcp_t *)handle)->socket;
   else if (handle->type == UV_UDP)
-    socket = ((uv_udp_t*) handle)->socket;
+    socket = ((uv_udp_t *)handle)->socket;
   else
     return UV_ENOTSUP;
 
   len = sizeof(*value);
 
   if (*value == 0)
-    r = getsockopt(socket, SOL_SOCKET, optname, (char*) value, &len);
+    r = getsockopt(socket, SOL_SOCKET, optname, (char *)value, &len);
   else
-    r = setsockopt(socket, SOL_SOCKET, optname, (const char*) value, len);
+    r = setsockopt(socket, SOL_SOCKET, optname, (const char *)value, len);
 
   if (r == SOCKET_ERROR)
     return uv_translate_sys_error(WSAGetLastError());
@@ -720,14 +688,10 @@ int uv__socket_sockopt(uv_handle_t* handle, int optname, int* value) {
   return 0;
 }
 
-int uv_cpumask_size(void) {
-  return (int)(sizeof(DWORD_PTR) * 8);
-}
+int uv_cpumask_size(void) { return (int)(sizeof(DWORD_PTR) * 8); }
 
-int uv__getsockpeername(const uv_handle_t* handle,
-                        uv__peersockfunc func,
-                        struct sockaddr* name,
-                        int* namelen,
+int uv__getsockpeername(const uv_handle_t *handle, uv__peersockfunc func,
+                        struct sockaddr *name, int *namelen,
                         int delayed_error) {
 
   int result;
@@ -740,7 +704,7 @@ int uv__getsockpeername(const uv_handle_t* handle,
   if (delayed_error)
     return uv_translate_sys_error(delayed_error);
 
-  result = func((SOCKET) fd, name, namelen);
+  result = func((SOCKET)fd, name, namelen);
   if (result != 0)
     return uv_translate_sys_error(WSAGetLastError());
 

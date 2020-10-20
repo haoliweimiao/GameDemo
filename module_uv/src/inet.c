@@ -19,25 +19,23 @@
 #include <string.h>
 
 #if defined(_MSC_VER) && _MSC_VER < 1600
-# include "uv/stdint-msvc2008.h"
+#include "uv/stdint-msvc2008.h"
 #else
-# include <stdint.h>
+#include <stdint.h>
 #endif
 
-#include "uv.h"
 #include "uv-common.h"
+#include "uv.h"
 
-#define UV__INET_ADDRSTRLEN         16
-#define UV__INET6_ADDRSTRLEN        46
-
+#define UV__INET_ADDRSTRLEN 16
+#define UV__INET6_ADDRSTRLEN 46
 
 static int inet_ntop4(const unsigned char *src, char *dst, size_t size);
 static int inet_ntop6(const unsigned char *src, char *dst, size_t size);
 static int inet_pton4(const char *src, unsigned char *dst);
 static int inet_pton6(const char *src, unsigned char *dst);
 
-
-int uv_inet_ntop(int af, const void* src, char* dst, size_t size) {
+int uv_inet_ntop(int af, const void *src, char *dst, size_t size) {
   switch (af) {
   case AF_INET:
     return (inet_ntop4(src, dst, size));
@@ -49,20 +47,18 @@ int uv_inet_ntop(int af, const void* src, char* dst, size_t size) {
   /* NOTREACHED */
 }
 
-
 static int inet_ntop4(const unsigned char *src, char *dst, size_t size) {
   static const char fmt[] = "%u.%u.%u.%u";
   char tmp[UV__INET_ADDRSTRLEN];
   int l;
 
   l = snprintf(tmp, sizeof(tmp), fmt, src[0], src[1], src[2], src[3]);
-  if (l <= 0 || (size_t) l >= size) {
+  if (l <= 0 || (size_t)l >= size) {
     return UV_ENOSPC;
   }
   uv__strscpy(dst, tmp, size);
   return 0;
 }
-
 
 static int inet_ntop6(const unsigned char *src, char *dst, size_t size) {
   /*
@@ -73,7 +69,9 @@ static int inet_ntop6(const unsigned char *src, char *dst, size_t size) {
    * to use pointer overlays.  All the world's not a VAX.
    */
   char tmp[UV__INET6_ADDRSTRLEN], *tp;
-  struct { int base, len; } best, cur;
+  struct {
+    int base, len;
+  } best, cur;
   unsigned int words[sizeof(struct in6_addr) / sizeof(uint16_t)];
   int i;
 
@@ -83,13 +81,13 @@ static int inet_ntop6(const unsigned char *src, char *dst, size_t size) {
    *  Find the longest run of 0x00's in src[] for :: shorthanding.
    */
   memset(words, '\0', sizeof words);
-  for (i = 0; i < (int) sizeof(struct in6_addr); i++)
+  for (i = 0; i < (int)sizeof(struct in6_addr); i++)
     words[i / 2] |= (src[i] << ((1 - (i % 2)) << 3));
   best.base = -1;
   best.len = 0;
   cur.base = -1;
   cur.len = 0;
-  for (i = 0; i < (int) ARRAY_SIZE(words); i++) {
+  for (i = 0; i < (int)ARRAY_SIZE(words); i++) {
     if (words[i] == 0) {
       if (cur.base == -1)
         cur.base = i, cur.len = 1;
@@ -114,10 +112,9 @@ static int inet_ntop6(const unsigned char *src, char *dst, size_t size) {
    * Format the result.
    */
   tp = tmp;
-  for (i = 0; i < (int) ARRAY_SIZE(words); i++) {
+  for (i = 0; i < (int)ARRAY_SIZE(words); i++) {
     /* Are we inside the best run of 0x00's? */
-    if (best.base != -1 && i >= best.base &&
-        i < (best.base + best.len)) {
+    if (best.base != -1 && i >= best.base && i < (best.base + best.len)) {
       if (i == best.base)
         *tp++ = ':';
       continue;
@@ -126,10 +123,10 @@ static int inet_ntop6(const unsigned char *src, char *dst, size_t size) {
     if (i != 0)
       *tp++ = ':';
     /* Is this address an encapsulated IPv4? */
-    if (i == 6 && best.base == 0 && (best.len == 6 ||
-        (best.len == 7 && words[7] != 0x0001) ||
-        (best.len == 5 && words[5] == 0xffff))) {
-      int err = inet_ntop4(src+12, tp, sizeof tmp - (tp - tmp));
+    if (i == 6 && best.base == 0 &&
+        (best.len == 6 || (best.len == 7 && words[7] != 0x0001) ||
+         (best.len == 5 && words[5] == 0xffff))) {
+      int err = inet_ntop4(src + 12, tp, sizeof tmp - (tp - tmp));
       if (err)
         return err;
       tp += strlen(tp);
@@ -146,8 +143,7 @@ static int inet_ntop6(const unsigned char *src, char *dst, size_t size) {
   return 0;
 }
 
-
-int uv_inet_pton(int af, const char* src, void* dst) {
+int uv_inet_pton(int af, const char *src, void *dst) {
   if (src == NULL || dst == NULL)
     return UV_EINVAL;
 
@@ -157,12 +153,12 @@ int uv_inet_pton(int af, const char* src, void* dst) {
   case AF_INET6: {
     int len;
     char tmp[UV__INET6_ADDRSTRLEN], *s, *p;
-    s = (char*) src;
+    s = (char *)src;
     p = strchr(src, '%');
     if (p != NULL) {
       s = tmp;
       len = p - src;
-      if (len > UV__INET6_ADDRSTRLEN-1)
+      if (len > UV__INET6_ADDRSTRLEN - 1)
         return UV_EINVAL;
       memcpy(s, src, len);
       s[len] = '\0';
@@ -174,7 +170,6 @@ int uv_inet_pton(int af, const char* src, void* dst) {
   }
   /* NOTREACHED */
 }
-
 
 static int inet_pton4(const char *src, unsigned char *dst) {
   static const char digits[] = "0123456789";
@@ -213,7 +208,6 @@ static int inet_pton4(const char *src, unsigned char *dst) {
   memcpy(dst, tmp, sizeof(struct in_addr));
   return 0;
 }
-
 
 static int inet_pton6(const char *src, unsigned char *dst) {
   static const char xdigits_l[] = "0123456789abcdef",
@@ -257,8 +251,8 @@ static int inet_pton6(const char *src, unsigned char *dst) {
       }
       if (tp + sizeof(uint16_t) > endp)
         return UV_EINVAL;
-      *tp++ = (unsigned char) (val >> 8) & 0xff;
-      *tp++ = (unsigned char) val & 0xff;
+      *tp++ = (unsigned char)(val >> 8) & 0xff;
+      *tp++ = (unsigned char)val & 0xff;
       seen_xdigits = 0;
       val = 0;
       continue;
@@ -268,7 +262,7 @@ static int inet_pton6(const char *src, unsigned char *dst) {
       if (err == 0) {
         tp += sizeof(struct in_addr);
         seen_xdigits = 0;
-        break;  /*%< '\\0' was seen by inet_pton4(). */
+        break; /*%< '\\0' was seen by inet_pton4(). */
       }
     }
     return UV_EINVAL;
@@ -276,8 +270,8 @@ static int inet_pton6(const char *src, unsigned char *dst) {
   if (seen_xdigits) {
     if (tp + sizeof(uint16_t) > endp)
       return UV_EINVAL;
-    *tp++ = (unsigned char) (val >> 8) & 0xff;
-    *tp++ = (unsigned char) val & 0xff;
+    *tp++ = (unsigned char)(val >> 8) & 0xff;
+    *tp++ = (unsigned char)val & 0xff;
   }
   if (colonp != NULL) {
     /*
@@ -290,7 +284,7 @@ static int inet_pton6(const char *src, unsigned char *dst) {
     if (tp == endp)
       return UV_EINVAL;
     for (i = 1; i <= n; i++) {
-      endp[- i] = colonp[n - i];
+      endp[-i] = colonp[n - i];
       colonp[n - i] = 0;
     }
     tp = endp;

@@ -2,8 +2,7 @@
 #define demo_udp_dhcp_h
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 void demo_udp_dhcp();

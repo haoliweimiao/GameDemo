@@ -19,13 +19,12 @@
  * IN THE SOFTWARE.
  */
 
-
 #include "os390-syscalls.h"
 #include <errno.h>
-#include <stdlib.h>
 #include <search.h>
-#include <termios.h>
+#include <stdlib.h>
 #include <sys/msg.h>
+#include <termios.h>
 
 #define CW_INTRPT 1
 #define CW_CONDVAR 32
@@ -37,16 +36,15 @@ static QUEUE global_epoll_queue;
 static uv_mutex_t global_epoll_lock;
 static uv_once_t once = UV_ONCE_INIT;
 
-int scandir(const char* maindir, struct dirent*** namelist,
-            int (*filter)(const struct dirent*),
-            int (*compar)(const struct dirent**,
-            const struct dirent **)) {
-  struct dirent** nl;
-  struct dirent** nl_copy;
-  struct dirent* dirent;
+int scandir(const char *maindir, struct dirent ***namelist,
+            int (*filter)(const struct dirent *),
+            int (*compar)(const struct dirent **, const struct dirent **)) {
+  struct dirent **nl;
+  struct dirent **nl_copy;
+  struct dirent *dirent;
   unsigned count;
   size_t allocated;
-  DIR* mdir;
+  DIR *mdir;
 
   nl = NULL;
   count = 0;
@@ -60,7 +58,7 @@ int scandir(const char* maindir, struct dirent*** namelist,
     if (!dirent)
       break;
     if (!filter || filter(dirent)) {
-      struct dirent* copy;
+      struct dirent *copy;
       copy = uv__malloc(sizeof(*copy));
       if (!copy)
         goto error;
@@ -78,7 +76,7 @@ int scandir(const char* maindir, struct dirent*** namelist,
   }
 
   qsort(nl, count, sizeof(struct dirent *),
-       (int (*)(const void *, const void *)) compar);
+        (int (*)(const void *, const void *))compar);
 
   closedir(mdir);
 
@@ -96,7 +94,6 @@ error:
   return -1;
 }
 
-
 static unsigned int next_power_of_two(unsigned int val) {
   val -= 1;
   val |= val >> 1;
@@ -108,11 +105,10 @@ static unsigned int next_power_of_two(unsigned int val) {
   return val;
 }
 
-
-static void maybe_resize(uv__os390_epoll* lst, unsigned int len) {
+static void maybe_resize(uv__os390_epoll *lst, unsigned int len) {
   unsigned int newsize;
   unsigned int i;
-  struct pollfd* newlst;
+  struct pollfd *newlst;
   struct pollfd event;
 
   if (len <= lst->size)
@@ -141,8 +137,7 @@ static void maybe_resize(uv__os390_epoll* lst, unsigned int len) {
   lst->size = newsize;
 }
 
-
-static void init_message_queue(uv__os390_epoll* lst) {
+static void init_message_queue(uv__os390_epoll *lst) {
   struct {
     long int header;
     char body;
@@ -167,19 +162,12 @@ static void init_message_queue(uv__os390_epoll* lst) {
     abort();
 }
 
+static void before_fork(void) { uv_mutex_lock(&global_epoll_lock); }
 
-static void before_fork(void) {
-  uv_mutex_lock(&global_epoll_lock);
-}
-
-
-static void after_fork(void) {
-  uv_mutex_unlock(&global_epoll_lock);
-}
-
+static void after_fork(void) { uv_mutex_unlock(&global_epoll_lock); }
 
 static void child_fork(void) {
-  QUEUE* q;
+  QUEUE *q;
   uv_once_t child_once = UV_ONCE_INIT;
 
   /* reset once */
@@ -187,7 +175,7 @@ static void child_fork(void) {
 
   /* reset epoll list */
   while (!QUEUE_EMPTY(&global_epoll_queue)) {
-    uv__os390_epoll* lst;
+    uv__os390_epoll *lst;
     q = QUEUE_HEAD(&global_epoll_queue);
     QUEUE_REMOVE(q);
     lst = QUEUE_DATA(q, uv__os390_epoll, member);
@@ -200,7 +188,6 @@ static void child_fork(void) {
   uv_mutex_destroy(&global_epoll_lock);
 }
 
-
 static void epoll_init(void) {
   QUEUE_INIT(&global_epoll_queue);
   if (uv_mutex_init(&global_epoll_lock))
@@ -210,9 +197,8 @@ static void epoll_init(void) {
     abort();
 }
 
-
-uv__os390_epoll* epoll_create1(int flags) {
-  uv__os390_epoll* lst;
+uv__os390_epoll *epoll_create1(int flags) {
+  uv__os390_epoll *lst;
 
   lst = uv__malloc(sizeof(*lst));
   if (lst != NULL) {
@@ -233,11 +219,7 @@ uv__os390_epoll* epoll_create1(int flags) {
   return lst;
 }
 
-
-int epoll_ctl(uv__os390_epoll* lst,
-              int op,
-              int fd,
-              struct epoll_event *event) {
+int epoll_ctl(uv__os390_epoll *lst, int op, int fd, struct epoll_event *event) {
   uv_mutex_lock(&global_epoll_lock);
 
   if (op == EPOLL_CTL_DEL) {
@@ -250,7 +232,7 @@ int epoll_ctl(uv__os390_epoll* lst,
   } else if (op == EPOLL_CTL_ADD) {
 
     /* Resizing to 'fd + 1' would expand the list to contain at least
-     * 'fd'. But we need to guarantee that the last index on the list 
+     * 'fd'. But we need to guarantee that the last index on the list
      * is reserved for the message queue. So specify 'fd + 2' instead.
      */
     maybe_resize(lst, fd + 2);
@@ -280,10 +262,10 @@ int epoll_ctl(uv__os390_epoll* lst,
 #define EP_MAX_PFDS (ULONG_MAX / sizeof(struct pollfd))
 #define EP_MAX_EVENTS (INT_MAX / sizeof(struct epoll_event))
 
-int epoll_wait(uv__os390_epoll* lst, struct epoll_event* events,
-               int maxevents, int timeout) {
+int epoll_wait(uv__os390_epoll *lst, struct epoll_event *events, int maxevents,
+               int timeout) {
   nmsgsfds_t size;
-  struct pollfd* pfds;
+  struct pollfd *pfds;
   int pollret;
   int reventcount;
   int nevents;
@@ -321,10 +303,9 @@ int epoll_wait(uv__os390_epoll* lst, struct epoll_event* events,
   reventcount = 0;
   nevents = 0;
   msg_fd = pfds[lst->size - 1];
-  for (i = 0;
-       i < lst->size && i < maxevents && reventcount < pollret; ++i) {
+  for (i = 0; i < lst->size && i < maxevents && reventcount < pollret; ++i) {
     struct epoll_event ev;
-    struct pollfd* pfd;
+    struct pollfd *pfd;
 
     pfd = &pfds[i];
     if (pfd->fd == -1 || pfd->revents == 0)
@@ -349,14 +330,13 @@ int epoll_wait(uv__os390_epoll* lst, struct epoll_event* events,
   return nevents;
 }
 
-
 int epoll_file_close(int fd) {
-  QUEUE* q;
+  QUEUE *q;
 
   uv_once(&once, epoll_init);
   uv_mutex_lock(&global_epoll_lock);
   QUEUE_FOREACH(q, &global_epoll_queue) {
-    uv__os390_epoll* lst;
+    uv__os390_epoll *lst;
 
     lst = QUEUE_DATA(q, uv__os390_epoll, member);
     if (fd < lst->size && lst->items != NULL && lst->items[fd].fd != -1)
@@ -367,7 +347,7 @@ int epoll_file_close(int fd) {
   return 0;
 }
 
-void epoll_queue_close(uv__os390_epoll* lst) {
+void epoll_queue_close(uv__os390_epoll *lst) {
   /* Remove epoll instance from global queue */
   uv_mutex_lock(&global_epoll_lock);
   QUEUE_REMOVE(&lst->member);
@@ -380,8 +360,7 @@ void epoll_queue_close(uv__os390_epoll* lst) {
   lst->items = NULL;
 }
 
-
-int nanosleep(const struct timespec* req, struct timespec* rem) {
+int nanosleep(const struct timespec *req, struct timespec *rem) {
   unsigned nano;
   unsigned seconds;
   unsigned events;
@@ -420,10 +399,9 @@ int nanosleep(const struct timespec* req, struct timespec* rem) {
   return rv;
 }
 
-
-char* mkdtemp(char* path) {
-  static const char* tempchars =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+char *mkdtemp(char *path) {
+  static const char *tempchars =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   static const size_t num_chars = 62;
   static const size_t num_x = 6;
   char *ep, *cp;
@@ -460,8 +438,7 @@ char* mkdtemp(char* path) {
     if (mkdir(path, S_IRWXU) == 0) {
       retval = 0;
       break;
-    }
-    else if (errno != EEXIST)
+    } else if (errno != EEXIST)
       break;
   } while (--tries);
 
@@ -480,14 +457,13 @@ char* mkdtemp(char* path) {
   return path;
 }
 
-
-ssize_t os390_readlink(const char* path, char* buf, size_t len) {
+ssize_t os390_readlink(const char *path, char *buf, size_t len) {
   ssize_t rlen;
   ssize_t vlen;
   ssize_t plen;
-  char* delimiter;
+  char *delimiter;
   char old_delim;
-  char* tmpbuf;
+  char *tmpbuf;
   char realpathstr[PATH_MAX + 1];
 
   tmpbuf = uv__malloc(len + 1);
@@ -549,36 +525,22 @@ ssize_t os390_readlink(const char* path, char* buf, size_t len) {
   return rlen;
 }
 
-
-size_t strnlen(const char* str, size_t maxlen) {
-  char* p = memchr(str, 0, maxlen);
+size_t strnlen(const char *str, size_t maxlen) {
+  char *p = memchr(str, 0, maxlen);
   if (p == NULL)
     return maxlen;
   else
     return p - str;
 }
 
-
-int sem_init(UV_PLATFORM_SEM_T* semid, int pshared, unsigned int value) {
+int sem_init(UV_PLATFORM_SEM_T *semid, int pshared, unsigned int value) {
   UNREACHABLE();
 }
 
+int sem_destroy(UV_PLATFORM_SEM_T *semid) { UNREACHABLE(); }
 
-int sem_destroy(UV_PLATFORM_SEM_T* semid) {
-  UNREACHABLE();
-}
+int sem_post(UV_PLATFORM_SEM_T *semid) { UNREACHABLE(); }
 
+int sem_trywait(UV_PLATFORM_SEM_T *semid) { UNREACHABLE(); }
 
-int sem_post(UV_PLATFORM_SEM_T* semid) {
-  UNREACHABLE();
-}
-
-
-int sem_trywait(UV_PLATFORM_SEM_T* semid) {
-  UNREACHABLE();
-}
-
-
-int sem_wait(UV_PLATFORM_SEM_T* semid) {
-  UNREACHABLE();
-}
+int sem_wait(UV_PLATFORM_SEM_T *semid) { UNREACHABLE(); }

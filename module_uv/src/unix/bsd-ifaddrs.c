@@ -49,7 +49,7 @@ static int uv__ifaddr_exclude(struct ifaddrs *ent, int exclude_type) {
   if (exclude_type == UV__EXCLUDE_IFPHYS)
     return (ent->ifa_addr->sa_family != AF_LINK);
 #endif
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__DragonFly__) || \
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__DragonFly__) ||    \
     defined(__HAIKU__)
   /*
    * On BSD getifaddrs returns information related to the raw underlying
@@ -65,10 +65,10 @@ static int uv__ifaddr_exclude(struct ifaddrs *ent, int exclude_type) {
   return 0;
 }
 
-int uv_interface_addresses(uv_interface_address_t** addresses, int* count) {
-  struct ifaddrs* addrs;
-  struct ifaddrs* ent;
-  uv_interface_address_t* address;
+int uv_interface_addresses(uv_interface_address_t **addresses, int *count) {
+  struct ifaddrs *addrs;
+  struct ifaddrs *ent;
+  uv_interface_address_t *address;
 #if !(defined(__CYGWIN__) || defined(__MSYS__))
   int i;
 #endif
@@ -108,17 +108,17 @@ int uv_interface_addresses(uv_interface_address_t** addresses, int* count) {
     address->name = uv__strdup(ent->ifa_name);
 
     if (ent->ifa_addr->sa_family == AF_INET6) {
-      address->address.address6 = *((struct sockaddr_in6*) ent->ifa_addr);
+      address->address.address6 = *((struct sockaddr_in6 *)ent->ifa_addr);
     } else {
-      address->address.address4 = *((struct sockaddr_in*) ent->ifa_addr);
+      address->address.address4 = *((struct sockaddr_in *)ent->ifa_addr);
     }
 
     if (ent->ifa_netmask == NULL) {
       memset(&address->netmask, 0, sizeof(address->netmask));
     } else if (ent->ifa_netmask->sa_family == AF_INET6) {
-      address->netmask.netmask6 = *((struct sockaddr_in6*) ent->ifa_netmask);
+      address->netmask.netmask6 = *((struct sockaddr_in6 *)ent->ifa_netmask);
     } else {
-      address->netmask.netmask4 = *((struct sockaddr_in*) ent->ifa_netmask);
+      address->netmask.netmask4 = *((struct sockaddr_in *)ent->ifa_netmask);
     }
 
     address->is_internal = !!(ent->ifa_flags & IFF_LOOPBACK);
@@ -136,8 +136,8 @@ int uv_interface_addresses(uv_interface_address_t** addresses, int* count) {
 
     for (i = 0; i < *count; i++) {
       if (strcmp(address->name, ent->ifa_name) == 0) {
-        struct sockaddr_dl* sa_addr;
-        sa_addr = (struct sockaddr_dl*)(ent->ifa_addr);
+        struct sockaddr_dl *sa_addr;
+        sa_addr = (struct sockaddr_dl *)(ent->ifa_addr);
         memcpy(address->phys_addr, LLADDR(sa_addr), sizeof(address->phys_addr));
       }
       address++;
@@ -150,9 +150,7 @@ int uv_interface_addresses(uv_interface_address_t** addresses, int* count) {
   return 0;
 }
 
-
-void uv_free_interface_addresses(uv_interface_address_t* addresses,
-                                 int count) {
+void uv_free_interface_addresses(uv_interface_address_t *addresses, int count) {
   int i;
 
   for (i = 0; i < count; i++) {

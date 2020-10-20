@@ -22,39 +22,38 @@
 #include "uv.h"
 #include "internal.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
 
+#include <fcntl.h>
+#include <poll.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <poll.h>
 
 #if defined(__APPLE__) && !TARGET_OS_IPHONE
-# include <crt_externs.h>
-# define environ (*_NSGetEnviron())
+#include <crt_externs.h>
+#define environ (*_NSGetEnviron())
 #else
 extern char **environ;
 #endif
 
 #if defined(__linux__) || defined(__GLIBC__)
-# include <grp.h>
+#include <grp.h>
 #endif
 
-
-static void uv__chld(uv_signal_t* handle, int signum) {
-  uv_process_t* process;
-  uv_loop_t* loop;
+static void uv__chld(uv_signal_t *handle, int signum) {
+  uv_process_t *process;
+  uv_loop_t *loop;
   int exit_status;
   int term_signal;
   int status;
   pid_t pid;
   QUEUE pending;
-  QUEUE* q;
-  QUEUE* h;
+  QUEUE *q;
+  QUEUE *h;
 
   assert(signum == SIGCHLD);
 
@@ -111,7 +110,6 @@ static void uv__chld(uv_signal_t* handle, int signum) {
   assert(QUEUE_EMPTY(&pending));
 }
 
-
 static int uv__make_socketpair(int fds[2]) {
 #if defined(__FreeBSD__) || defined(__linux__)
   if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, fds))
@@ -137,7 +135,6 @@ static int uv__make_socketpair(int fds[2]) {
   return 0;
 #endif
 }
-
 
 int uv__make_pipe(int fds[2], int flags) {
 #if defined(__FreeBSD__) || defined(__linux__)
@@ -172,12 +169,11 @@ fail:
 #endif
 }
 
-
 /*
  * Used for initializing stdio streams like options.stdin_stream. Returns
  * zero on success. See also the cleanup section in uv_spawn().
  */
-static int uv__process_init_stdio(uv_stdio_container_t* container, int fds[2]) {
+static int uv__process_init_stdio(uv_stdio_container_t *container, int fds[2]) {
   int mask;
   int fd;
 
@@ -213,8 +209,7 @@ static int uv__process_init_stdio(uv_stdio_container_t* container, int fds[2]) {
   }
 }
 
-
-static int uv__process_open_stream(uv_stdio_container_t* container,
+static int uv__process_open_stream(uv_stdio_container_t *container,
                                    int pipefds[2]) {
   int flags;
   int err;
@@ -238,12 +233,11 @@ static int uv__process_open_stream(uv_stdio_container_t* container,
   return uv__stream_open(container->data.stream, pipefds[0], flags);
 }
 
-
-static void uv__process_close_stream(uv_stdio_container_t* container) {
-  if (!(container->flags & UV_CREATE_PIPE)) return;
+static void uv__process_close_stream(uv_stdio_container_t *container) {
+  if (!(container->flags & UV_CREATE_PIPE))
+    return;
   uv__stream_close(container->data.stream);
 }
-
 
 static void uv__write_int(int fd, int val) {
   ssize_t n;
@@ -258,15 +252,13 @@ static void uv__write_int(int fd, int val) {
   assert(n == sizeof(val));
 }
 
-
 #if !(defined(__APPLE__) && (TARGET_OS_TV || TARGET_OS_WATCH))
 /* execvp is marked __WATCHOS_PROHIBITED __TVOS_PROHIBITED, so must be
  * avoided. Since this isn't called on those targets, the function
  * doesn't even need to be defined for them.
  */
-static void uv__process_child_init(const uv_process_options_t* options,
-                                   int stdio_count,
-                                   int (*pipes)[2],
+static void uv__process_child_init(const uv_process_options_t *options,
+                                   int stdio_count, int (*pipes)[2],
                                    int error_fd) {
   sigset_t set;
   int close_fd;
@@ -375,11 +367,11 @@ static void uv__process_child_init(const uv_process_options_t* options,
    */
   for (n = 1; n < 32; n += 1) {
     if (n == SIGKILL || n == SIGSTOP)
-      continue;  /* Can't be changed. */
+      continue; /* Can't be changed. */
 
 #if defined(__HAIKU__)
     if (n == SIGKILLTHR)
-      continue;  /* Can't be changed. */
+      continue; /* Can't be changed. */
 #endif
 
     if (SIG_ERR != signal(n, SIG_DFL))
@@ -404,17 +396,15 @@ static void uv__process_child_init(const uv_process_options_t* options,
 }
 #endif
 
-
-int uv_spawn(uv_loop_t* loop,
-             uv_process_t* process,
-             const uv_process_options_t* options) {
+int uv_spawn(uv_loop_t *loop, uv_process_t *process,
+             const uv_process_options_t *options) {
 #if defined(__APPLE__) && (TARGET_OS_TV || TARGET_OS_WATCH)
   /* fork is marked __WATCHOS_PROHIBITED __TVOS_PROHIBITED. */
   return UV_ENOSYS;
 #else
-  int signal_pipe[2] = { -1, -1 };
+  int signal_pipe[2] = {-1, -1};
   int pipes_storage[8][2];
-  int (*pipes)[2];
+  int(*pipes)[2];
   int stdio_count;
   ssize_t r;
   pid_t pid;
@@ -424,15 +414,13 @@ int uv_spawn(uv_loop_t* loop,
   int status;
 
   assert(options->file != NULL);
-  assert(!(options->flags & ~(UV_PROCESS_DETACHED |
-                              UV_PROCESS_SETGID |
-                              UV_PROCESS_SETUID |
-                              UV_PROCESS_WINDOWS_HIDE |
-                              UV_PROCESS_WINDOWS_HIDE_CONSOLE |
-                              UV_PROCESS_WINDOWS_HIDE_GUI |
-                              UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS)));
+  assert(!(options->flags &
+           ~(UV_PROCESS_DETACHED | UV_PROCESS_SETGID | UV_PROCESS_SETUID |
+             UV_PROCESS_WINDOWS_HIDE | UV_PROCESS_WINDOWS_HIDE_CONSOLE |
+             UV_PROCESS_WINDOWS_HIDE_GUI |
+             UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS)));
 
-  uv__handle_init(loop, (uv_handle_t*)process, UV_PROCESS);
+  uv__handle_init(loop, (uv_handle_t *)process, UV_PROCESS);
   QUEUE_INIT(&process->queue);
 
   stdio_count = options->stdio_count;
@@ -441,7 +429,7 @@ int uv_spawn(uv_loop_t* loop,
 
   err = UV_ENOMEM;
   pipes = pipes_storage;
-  if (stdio_count > (int) ARRAY_SIZE(pipes_storage))
+  if (stdio_count > (int)ARRAY_SIZE(pipes_storage))
     pipes = uv__malloc(stdio_count * sizeof(*pipes));
 
   if (pipes == NULL)
@@ -573,11 +561,9 @@ error:
 #endif
 }
 
-
-int uv_process_kill(uv_process_t* process, int signum) {
+int uv_process_kill(uv_process_t *process, int signum) {
   return uv_kill(process->pid, signum);
 }
-
 
 int uv_kill(int pid, int signum) {
   if (kill(pid, signum))
@@ -586,8 +572,7 @@ int uv_kill(int pid, int signum) {
     return 0;
 }
 
-
-void uv__process_close(uv_process_t* handle) {
+void uv__process_close(uv_process_t *handle) {
   QUEUE_REMOVE(&handle->queue);
   uv__handle_stop(handle);
   if (QUEUE_EMPTY(&handle->loop->process_handles))

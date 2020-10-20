@@ -36,7 +36,7 @@
 #include <pthread.h>
 #include <signal.h>
 
-int uv__pthread_sigmask(int how, const sigset_t* set, sigset_t* oset) {
+int uv__pthread_sigmask(int how, const sigset_t *set, sigset_t *oset) {
   static int workaround;
   int err;
 

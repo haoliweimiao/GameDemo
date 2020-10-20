@@ -2,8 +2,7 @@
 #define db_sql_h
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**

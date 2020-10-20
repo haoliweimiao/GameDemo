@@ -25,29 +25,27 @@
 #include <string.h>
 
 struct uv__process_title {
-  char* str;
-  size_t len;  /* Length of the current process title. */
-  size_t cap;  /* Maximum capacity. Computed once in uv_setup_args(). */
+  char *str;
+  size_t len; /* Length of the current process title. */
+  size_t cap; /* Maximum capacity. Computed once in uv_setup_args(). */
 };
 
-extern void uv__set_process_title(const char* title);
+extern void uv__set_process_title(const char *title);
 
 static uv_mutex_t process_title_mutex;
 static uv_once_t process_title_mutex_once = UV_ONCE_INIT;
 static struct uv__process_title process_title;
-static void* args_mem;
-
+static void *args_mem;
 
 static void init_process_title_mutex_once(void) {
   uv_mutex_init(&process_title_mutex);
 }
 
-
-char** uv_setup_args(int argc, char** argv) {
+char **uv_setup_args(int argc, char **argv) {
   struct uv__process_title pt;
-  char** new_argv;
+  char **new_argv;
   size_t size;
-  char* s;
+  char *s;
   int i;
 
   if (argc <= 0)
@@ -63,7 +61,7 @@ char** uv_setup_args(int argc, char** argv) {
     size += strlen(argv[i]) + 1;
 
   /* Add space for the argv pointers. */
-  size += (argc + 1) * sizeof(char*);
+  size += (argc + 1) * sizeof(char *);
 
   new_argv = uv__malloc(size);
   if (new_argv == NULL)
@@ -71,7 +69,7 @@ char** uv_setup_args(int argc, char** argv) {
 
   /* Copy over the strings and set up the pointer table. */
   i = 0;
-  s = (char*) &new_argv[argc + 1];
+  s = (char *)&new_argv[argc + 1];
   size = pt.cap;
   goto loop;
 
@@ -84,7 +82,7 @@ char** uv_setup_args(int argc, char** argv) {
   }
   new_argv[i] = NULL;
 
-  /* argv is not adjacent on z/os, we use just argv[0] on that platform. */
+/* argv is not adjacent on z/os, we use just argv[0] on that platform. */
 #ifndef __MVS__
   pt.cap = argv[i - 1] + size - argv[0];
 #endif
@@ -95,9 +93,8 @@ char** uv_setup_args(int argc, char** argv) {
   return new_argv;
 }
 
-
-int uv_set_process_title(const char* title) {
-  struct uv__process_title* pt;
+int uv_set_process_title(const char *title) {
+  struct uv__process_title *pt;
   size_t len;
 
   /* If uv_setup_args wasn't called or failed, we can't continue. */
@@ -125,8 +122,7 @@ int uv_set_process_title(const char* title) {
   return 0;
 }
 
-
-int uv_get_process_title(char* buffer, size_t size) {
+int uv_get_process_title(char *buffer, size_t size) {
   if (buffer == NULL || size == 0)
     return UV_EINVAL;
 
@@ -152,8 +148,7 @@ int uv_get_process_title(char* buffer, size_t size) {
   return 0;
 }
 
-
 void uv__process_title_cleanup(void) {
-  uv__free(args_mem);  /* Keep valgrind happy. */
+  uv__free(args_mem); /* Keep valgrind happy. */
   args_mem = NULL;
 }

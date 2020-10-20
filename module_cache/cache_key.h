@@ -2,8 +2,7 @@
 #define cache_key_h
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 /**
  * 存档1是否建立使用

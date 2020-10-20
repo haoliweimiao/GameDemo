@@ -20,24 +20,23 @@
  */
 
 #include "uv.h"
-#include "uv/tree.h"
-#include "internal.h"
 #include "heap-inl.h"
+#include "internal.h"
+#include "uv/tree.h"
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-int uv_loop_init(uv_loop_t* loop) {
-  uv__loop_internal_fields_t* lfields;
-  void* saved_data;
+int uv_loop_init(uv_loop_t *loop) {
+  uv__loop_internal_fields_t *lfields;
+  void *saved_data;
   int err;
-
 
   saved_data = loop->data;
   memset(loop, 0, sizeof(*loop));
   loop->data = saved_data;
 
-  lfields = (uv__loop_internal_fields_t*) uv__calloc(1, sizeof(*lfields));
+  lfields = (uv__loop_internal_fields_t *)uv__calloc(1, sizeof(*lfields));
   if (lfields == NULL)
     return UV_ENOMEM;
   loop->internal_fields = lfields;
@@ -46,7 +45,7 @@ int uv_loop_init(uv_loop_t* loop) {
   if (err)
     goto fail_metrics_mutex_init;
 
-  heap_init((struct heap*) &loop->timer_heap);
+  heap_init((struct heap *)&loop->timer_heap);
   QUEUE_INIT(&loop->wq);
   QUEUE_INIT(&loop->idle_handles);
   QUEUE_INIT(&loop->async_handles);
@@ -128,11 +127,10 @@ fail_metrics_mutex_init:
   return err;
 }
 
-
-int uv_loop_fork(uv_loop_t* loop) {
+int uv_loop_fork(uv_loop_t *loop) {
   int err;
   unsigned int i;
-  uv__io_t* w;
+  uv__io_t *w;
 
   err = uv__io_fork(loop);
   if (err)
@@ -161,9 +159,8 @@ int uv_loop_fork(uv_loop_t* loop) {
   return 0;
 }
 
-
-void uv__loop_close(uv_loop_t* loop) {
-  uv__loop_internal_fields_t* lfields;
+void uv__loop_close(uv_loop_t *loop) {
+  uv__loop_internal_fields_t *lfields;
 
   uv__signal_loop_cleanup(loop);
   uv__platform_loop_delete(loop);
@@ -207,9 +204,8 @@ void uv__loop_close(uv_loop_t* loop) {
   loop->internal_fields = NULL;
 }
 
-
-int uv__loop_configure(uv_loop_t* loop, uv_loop_option option, va_list ap) {
-  uv__loop_internal_fields_t* lfields;
+int uv__loop_configure(uv_loop_t *loop, uv_loop_option option, va_list ap) {
+  uv__loop_internal_fields_t *lfields;
 
   lfields = uv__get_internal_fields(loop);
   if (option == UV_METRICS_IDLE_TIME) {

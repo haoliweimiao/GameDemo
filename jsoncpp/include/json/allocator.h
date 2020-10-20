@@ -16,10 +16,10 @@ template <typename T> class SecureAllocator {
 public:
   // Type definitions
   using value_type = T;
-  using pointer = T*;
-  using const_pointer = const T*;
-  using reference = T&;
-  using const_reference = const T&;
+  using pointer = T *;
+  using const_pointer = const T *;
+  using reference = T &;
+  using const_reference = const T &;
   using size_type = std::size_t;
   using difference_type = std::ptrdiff_t;
 
@@ -47,9 +47,9 @@ public:
   /**
    * Construct an item in-place at pointer P.
    */
-  template <typename... Args> void construct(pointer p, Args&&... args) {
+  template <typename... Args> void construct(pointer p, Args &&... args) {
     // construct using "placement new" and "perfect forwarding"
-    ::new (static_cast<void*>(p)) T(std::forward<Args>(args)...);
+    ::new (static_cast<void *>(p)) T(std::forward<Args>(args)...);
   }
 
   size_type max_size() const { return size_t(-1) / sizeof(T); }
@@ -68,17 +68,17 @@ public:
 
   // Boilerplate
   SecureAllocator() {}
-  template <typename U> SecureAllocator(const SecureAllocator<U>&) {}
+  template <typename U> SecureAllocator(const SecureAllocator<U> &) {}
   template <typename U> struct rebind { using other = SecureAllocator<U>; };
 };
 
 template <typename T, typename U>
-bool operator==(const SecureAllocator<T>&, const SecureAllocator<U>&) {
+bool operator==(const SecureAllocator<T> &, const SecureAllocator<U> &) {
   return true;
 }
 
 template <typename T, typename U>
-bool operator!=(const SecureAllocator<T>&, const SecureAllocator<U>&) {
+bool operator!=(const SecureAllocator<T> &, const SecureAllocator<U> &) {
   return false;
 }
 

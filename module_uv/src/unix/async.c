@@ -23,33 +23,32 @@
  */
 
 #include "uv.h"
-#include "internal.h"
 #include "atomic-ops.h"
+#include "internal.h"
 
-#include <errno.h>
-#include <stdio.h>  /* snprintf() */
 #include <assert.h>
+#include <errno.h>
+#include <sched.h> /* sched_yield() */
+#include <stdio.h> /* snprintf() */
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sched.h>  /* sched_yield() */
 
 #ifdef __linux__
 #include <sys/eventfd.h>
 #endif
 
-static void uv__async_send(uv_loop_t* loop);
-static int uv__async_start(uv_loop_t* loop);
+static void uv__async_send(uv_loop_t *loop);
+static int uv__async_start(uv_loop_t *loop);
 
-
-int uv_async_init(uv_loop_t* loop, uv_async_t* handle, uv_async_cb async_cb) {
+int uv_async_init(uv_loop_t *loop, uv_async_t *handle, uv_async_cb async_cb) {
   int err;
 
   err = uv__async_start(loop);
   if (err)
     return err;
 
-  uv__handle_init(loop, (uv_handle_t*)handle, UV_ASYNC);
+  uv__handle_init(loop, (uv_handle_t *)handle, UV_ASYNC);
   handle->async_cb = async_cb;
   handle->pending = 0;
 
@@ -59,8 +58,7 @@ int uv_async_init(uv_loop_t* loop, uv_async_t* handle, uv_async_cb async_cb) {
   return 0;
 }
 
-
-int uv_async_send(uv_async_t* handle) {
+int uv_async_send(uv_async_t *handle) {
   /* Do a cheap read first. */
   if (ACCESS_ONCE(int, handle->pending) != 0)
     return 0;
@@ -79,9 +77,8 @@ int uv_async_send(uv_async_t* handle) {
   return 0;
 }
 
-
 /* Only call this from the event loop thread. */
-static int uv__async_spin(uv_async_t* handle) {
+static int uv__async_spin(uv_async_t *handle) {
   int i;
   int rc;
 
@@ -111,20 +108,18 @@ static int uv__async_spin(uv_async_t* handle) {
   }
 }
 
-
-void uv__async_close(uv_async_t* handle) {
+void uv__async_close(uv_async_t *handle) {
   uv__async_spin(handle);
   QUEUE_REMOVE(&handle->queue);
   uv__handle_stop(handle);
 }
 
-
-static void uv__async_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
+static void uv__async_io(uv_loop_t *loop, uv__io_t *w, unsigned int events) {
   char buf[1024];
   ssize_t r;
   QUEUE queue;
-  QUEUE* q;
-  uv_async_t* h;
+  QUEUE *q;
+  uv_async_t *h;
 
   assert(w == &loop->async_io_watcher);
 
@@ -155,7 +150,7 @@ static void uv__async_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
     QUEUE_INSERT_TAIL(&loop->async_handles, q);
 
     if (0 == uv__async_spin(h))
-      continue;  /* Not pending. */
+      continue; /* Not pending. */
 
     if (h->async_cb == NULL)
       continue;
@@ -164,9 +159,8 @@ static void uv__async_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
   }
 }
 
-
-static void uv__async_send(uv_loop_t* loop) {
-  const void* buf;
+static void uv__async_send(uv_loop_t *loop) {
+  const void *buf;
   ssize_t len;
   int fd;
   int r;
@@ -180,7 +174,7 @@ static void uv__async_send(uv_loop_t* loop) {
     static const uint64_t val = 1;
     buf = &val;
     len = sizeof(val);
-    fd = loop->async_io_watcher.fd;  /* eventfd */
+    fd = loop->async_io_watcher.fd; /* eventfd */
   }
 #endif
 
@@ -198,8 +192,7 @@ static void uv__async_send(uv_loop_t* loop) {
   abort();
 }
 
-
-static int uv__async_start(uv_loop_t* loop) {
+static int uv__async_start(uv_loop_t *loop) {
   int pipefd[2];
   int err;
 
@@ -226,8 +219,7 @@ static int uv__async_start(uv_loop_t* loop) {
   return 0;
 }
 
-
-int uv__async_fork(uv_loop_t* loop) {
+int uv__async_fork(uv_loop_t *loop) {
   if (loop->async_io_watcher.fd == -1) /* never started */
     return 0;
 
@@ -236,8 +228,7 @@ int uv__async_fork(uv_loop_t* loop) {
   return uv__async_start(loop);
 }
 
-
-void uv__async_stop(uv_loop_t* loop) {
+void uv__async_stop(uv_loop_t *loop) {
   if (loop->async_io_watcher.fd == -1)
     return;
 

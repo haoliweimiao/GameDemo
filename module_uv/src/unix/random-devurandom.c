@@ -28,8 +28,7 @@
 static uv_once_t once = UV_ONCE_INIT;
 static int status;
 
-
-int uv__random_readpath(const char* path, void* buf, size_t buflen) {
+int uv__random_readpath(const char *path, void *buf, size_t buflen) {
   struct stat s;
   size_t pos;
   ssize_t n;
@@ -52,7 +51,7 @@ int uv__random_readpath(const char* path, void* buf, size_t buflen) {
 
   for (pos = 0; pos != buflen; pos += n) {
     do
-      n = read(fd, (char*) buf + pos, buflen - pos);
+      n = read(fd, (char *)buf + pos, buflen - pos);
     while (n == -1 && errno == EINTR);
 
     if (n == -1) {
@@ -70,7 +69,6 @@ int uv__random_readpath(const char* path, void* buf, size_t buflen) {
   return 0;
 }
 
-
 static void uv__random_devurandom_init(void) {
   char c;
 
@@ -82,8 +80,7 @@ static void uv__random_devurandom_init(void) {
   status = uv__random_readpath("/dev/random", &c, 1);
 }
 
-
-int uv__random_devurandom(void* buf, size_t buflen) {
+int uv__random_devurandom(void *buf, size_t buflen) {
   uv_once(&once, uv__random_devurandom_init);
 
   if (status != 0)

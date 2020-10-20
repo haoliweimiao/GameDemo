@@ -28,12 +28,12 @@
  */
 
 #include <assert.h>
+#include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <errno.h>
 #include <unistd.h>
 
-int uv__platform_loop_init(uv_loop_t* loop) {
+int uv__platform_loop_init(uv_loop_t *loop) {
   loop->poll_fds = NULL;
   loop->poll_fds_used = 0;
   loop->poll_fds_size = 0;
@@ -41,21 +41,21 @@ int uv__platform_loop_init(uv_loop_t* loop) {
   return 0;
 }
 
-void uv__platform_loop_delete(uv_loop_t* loop) {
+void uv__platform_loop_delete(uv_loop_t *loop) {
   uv__free(loop->poll_fds);
   loop->poll_fds = NULL;
 }
 
-int uv__io_fork(uv_loop_t* loop) {
+int uv__io_fork(uv_loop_t *loop) {
   uv__platform_loop_delete(loop);
   return uv__platform_loop_init(loop);
 }
 
 /* Allocate or dynamically resize our poll fds array.  */
-static void uv__pollfds_maybe_resize(uv_loop_t* loop) {
+static void uv__pollfds_maybe_resize(uv_loop_t *loop) {
   size_t i;
   size_t n;
-  struct pollfd* p;
+  struct pollfd *p;
 
   if (loop->poll_fds_used < loop->poll_fds_size)
     return;
@@ -75,7 +75,7 @@ static void uv__pollfds_maybe_resize(uv_loop_t* loop) {
 }
 
 /* Primitive swap operation on poll fds array elements.  */
-static void uv__pollfds_swap(uv_loop_t* loop, size_t l, size_t r) {
+static void uv__pollfds_swap(uv_loop_t *loop, size_t l, size_t r) {
   struct pollfd pfd;
   pfd = loop->poll_fds[l];
   loop->poll_fds[l] = loop->poll_fds[r];
@@ -83,9 +83,9 @@ static void uv__pollfds_swap(uv_loop_t* loop, size_t l, size_t r) {
 }
 
 /* Add a watcher's fd to our poll fds array with its pending events.  */
-static void uv__pollfds_add(uv_loop_t* loop, uv__io_t* w) {
+static void uv__pollfds_add(uv_loop_t *loop, uv__io_t *w) {
   size_t i;
-  struct pollfd* pe;
+  struct pollfd *pe;
 
   /* If the fd is already in the set just update its events.  */
   assert(!loop->poll_fds_iterating);
@@ -104,7 +104,7 @@ static void uv__pollfds_add(uv_loop_t* loop, uv__io_t* w) {
 }
 
 /* Remove a watcher's fd from our poll fds array.  */
-static void uv__pollfds_del(uv_loop_t* loop, int fd) {
+static void uv__pollfds_del(uv_loop_t *loop, int fd) {
   size_t i;
   assert(!loop->poll_fds_iterating);
   for (i = 0; i < loop->poll_fds_used;) {
@@ -125,24 +125,23 @@ static void uv__pollfds_del(uv_loop_t* loop, int fd) {
        * Otherwise, when we are purging an invalidated fd, the value just
        * swapped here from the previous end of the array will be skipped.
        */
-       ++i;
+      ++i;
     }
   }
 }
 
-
-void uv__io_poll(uv_loop_t* loop, int timeout) {
-  sigset_t* pset;
+void uv__io_poll(uv_loop_t *loop, int timeout) {
+  sigset_t *pset;
   sigset_t set;
   uint64_t time_base;
   uint64_t time_diff;
-  QUEUE* q;
-  uv__io_t* w;
+  QUEUE *q;
+  uv__io_t *w;
   size_t i;
   unsigned int nevents;
   int nfds;
   int have_signals;
-  struct pollfd* pe;
+  struct pollfd *pe;
   int fd;
   int user_timeout;
   int reset_timeout;
@@ -161,7 +160,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     w = QUEUE_DATA(q, uv__io_t, watcher_queue);
     assert(w->pevents != 0);
     assert(w->fd >= 0);
-    assert(w->fd < (int) loop->nwatchers);
+    assert(w->fd < (int)loop->nwatchers);
 
     uv__pollfds_add(loop, w);
 
@@ -264,7 +263,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         continue;
 
       assert(fd >= 0);
-      assert((unsigned) fd < loop->nwatchers);
+      assert((unsigned)fd < loop->nwatchers);
 
       w = loop->watchers[fd];
 
@@ -308,7 +307,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     uv__pollfds_del(loop, -1);
 
     if (have_signals != 0)
-      return;  /* Event loop should cycle now so don't poll again. */
+      return; /* Event loop should cycle now so don't poll again. */
 
     if (nevents != 0)
       return;
@@ -319,11 +318,11 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     if (timeout == -1)
       continue;
 
-update_timeout:
+  update_timeout:
     assert(timeout > 0);
 
     time_diff = loop->time - time_base;
-    if (time_diff >= (uint64_t) timeout)
+    if (time_diff >= (uint64_t)timeout)
       return;
 
     timeout -= time_diff;
@@ -333,7 +332,7 @@ update_timeout:
 /* Remove the given fd from our poll fds array because no one
  * is interested in its events anymore.
  */
-void uv__platform_invalidate_fd(uv_loop_t* loop, int fd) {
+void uv__platform_invalidate_fd(uv_loop_t *loop, int fd) {
   size_t i;
 
   assert(fd >= 0);
@@ -353,7 +352,7 @@ void uv__platform_invalidate_fd(uv_loop_t* loop, int fd) {
 }
 
 /* Check whether the given fd is supported by poll().  */
-int uv__io_check_fd(uv_loop_t* loop, int fd) {
+int uv__io_check_fd(uv_loop_t *loop, int fd) {
   struct pollfd p[1];
   int rv;
 

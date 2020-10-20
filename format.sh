@@ -34,10 +34,11 @@ function formatFile(){
     if [ "$isC" -eq "1" ]; then
         # install apk in background
         {
-            echo "format c file $file"
-            formatRet=`clang-format $file`
-            # 格式化后的代码覆盖写入
-            echo $formatRet > $file
+            # echo "format c file $file"
+            # formatRet=`clang-format $file`
+            # # 格式化后的代码覆盖写入
+            # echo $formatRet > $file
+            clang-format -style=llvm -i $file
         }
     fi
 }

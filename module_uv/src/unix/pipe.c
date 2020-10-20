@@ -24,14 +24,13 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <stdlib.h>
 
-
-int uv_pipe_init(uv_loop_t* loop, uv_pipe_t* handle, int ipc) {
-  uv__stream_init(loop, (uv_stream_t*)handle, UV_NAMED_PIPE);
+int uv_pipe_init(uv_loop_t *loop, uv_pipe_t *handle, int ipc) {
+  uv__stream_init(loop, (uv_stream_t *)handle, UV_NAMED_PIPE);
   handle->shutdown_req = NULL;
   handle->connect_req = NULL;
   handle->pipe_fname = NULL;
@@ -39,10 +38,9 @@ int uv_pipe_init(uv_loop_t* loop, uv_pipe_t* handle, int ipc) {
   return 0;
 }
 
-
-int uv_pipe_bind(uv_pipe_t* handle, const char* name) {
+int uv_pipe_bind(uv_pipe_t *handle, const char *name) {
   struct sockaddr_un saddr;
-  const char* pipe_fname;
+  const char *pipe_fname;
   int sockfd;
   int err;
 
@@ -69,7 +67,7 @@ int uv_pipe_bind(uv_pipe_t* handle, const char* name) {
   uv__strscpy(saddr.sun_path, pipe_fname, sizeof(saddr.sun_path));
   saddr.sun_family = AF_UNIX;
 
-  if (bind(sockfd, (struct sockaddr*)&saddr, sizeof saddr)) {
+  if (bind(sockfd, (struct sockaddr *)&saddr, sizeof saddr)) {
     err = UV__ERR(errno);
     /* Convert ENOENT to EACCES for compatibility with Windows. */
     if (err == UV_ENOENT)
@@ -86,12 +84,11 @@ int uv_pipe_bind(uv_pipe_t* handle, const char* name) {
   return 0;
 
 err_socket:
-  uv__free((void*)pipe_fname);
+  uv__free((void *)pipe_fname);
   return err;
 }
 
-
-int uv_pipe_listen(uv_pipe_t* handle, int backlog, uv_connection_cb cb) {
+int uv_pipe_listen(uv_pipe_t *handle, int backlog, uv_connection_cb cb) {
   if (uv__stream_fd(handle) == -1)
     return UV_EINVAL;
 
@@ -116,8 +113,7 @@ int uv_pipe_listen(uv_pipe_t* handle, int backlog, uv_connection_cb cb) {
   return 0;
 }
 
-
-void uv__pipe_close(uv_pipe_t* handle) {
+void uv__pipe_close(uv_pipe_t *handle) {
   if (handle->pipe_fname) {
     /*
      * Unlink the file system entity before closing the file descriptor.
@@ -126,15 +122,14 @@ void uv__pipe_close(uv_pipe_t* handle) {
      * another thread or process.
      */
     unlink(handle->pipe_fname);
-    uv__free((void*)handle->pipe_fname);
+    uv__free((void *)handle->pipe_fname);
     handle->pipe_fname = NULL;
   }
 
-  uv__stream_close((uv_stream_t*)handle);
+  uv__stream_close((uv_stream_t *)handle);
 }
 
-
-int uv_pipe_open(uv_pipe_t* handle, uv_file fd) {
+int uv_pipe_open(uv_pipe_t *handle, uv_file fd) {
   int flags;
   int mode;
   int err;
@@ -155,7 +150,7 @@ int uv_pipe_open(uv_pipe_t* handle, uv_file fd) {
     return err;
 
 #if defined(__APPLE__)
-  err = uv__stream_try_select((uv_stream_t*) handle, &fd);
+  err = uv__stream_try_select((uv_stream_t *)handle, &fd);
   if (err)
     return err;
 #endif /* defined(__APPLE__) */
@@ -166,14 +161,11 @@ int uv_pipe_open(uv_pipe_t* handle, uv_file fd) {
   if (mode != O_RDONLY)
     flags |= UV_HANDLE_WRITABLE;
 
-  return uv__stream_open((uv_stream_t*)handle, fd, flags);
+  return uv__stream_open((uv_stream_t *)handle, fd, flags);
 }
 
-
-void uv_pipe_connect(uv_connect_t* req,
-                    uv_pipe_t* handle,
-                    const char* name,
-                    uv_connect_cb cb) {
+void uv_pipe_connect(uv_connect_t *req, uv_pipe_t *handle, const char *name,
+                     uv_connect_cb cb) {
   struct sockaddr_un saddr;
   int new_sock;
   int err;
@@ -193,10 +185,8 @@ void uv_pipe_connect(uv_connect_t* req,
   saddr.sun_family = AF_UNIX;
 
   do {
-    r = connect(uv__stream_fd(handle),
-                (struct sockaddr*)&saddr, sizeof saddr);
-  }
-  while (r == -1 && errno == EINTR);
+    r = connect(uv__stream_fd(handle), (struct sockaddr *)&saddr, sizeof saddr);
+  } while (r == -1 && errno == EINTR);
 
   if (r == -1 && errno != EINPROGRESS) {
     err = UV__ERR(errno);
@@ -213,8 +203,7 @@ void uv_pipe_connect(uv_connect_t* req,
 
   err = 0;
   if (new_sock) {
-    err = uv__stream_open((uv_stream_t*)handle,
-                          uv__stream_fd(handle),
+    err = uv__stream_open((uv_stream_t *)handle, uv__stream_fd(handle),
                           UV_HANDLE_READABLE | UV_HANDLE_WRITABLE);
   }
 
@@ -226,31 +215,26 @@ out:
   handle->connect_req = req;
 
   uv__req_init(handle->loop, req, UV_CONNECT);
-  req->handle = (uv_stream_t*)handle;
+  req->handle = (uv_stream_t *)handle;
   req->cb = cb;
   QUEUE_INIT(&req->queue);
 
   /* Force callback to run on next tick in case of error. */
   if (err)
     uv__io_feed(handle->loop, &handle->io_watcher);
-
 }
 
-
-static int uv__pipe_getsockpeername(const uv_pipe_t* handle,
-                                    uv__peersockfunc func,
-                                    char* buffer,
-                                    size_t* size) {
+static int uv__pipe_getsockpeername(const uv_pipe_t *handle,
+                                    uv__peersockfunc func, char *buffer,
+                                    size_t *size) {
   struct sockaddr_un sa;
   socklen_t addrlen;
   int err;
 
   addrlen = sizeof(sa);
   memset(&sa, 0, addrlen);
-  err = uv__getsockpeername((const uv_handle_t*) handle,
-                            func,
-                            (struct sockaddr*) &sa,
-                            (int*) &addrlen);
+  err = uv__getsockpeername((const uv_handle_t *)handle, func,
+                            (struct sockaddr *)&sa, (int *)&addrlen);
   if (err < 0) {
     *size = 0;
     return err;
@@ -263,7 +247,6 @@ static int uv__pipe_getsockpeername(const uv_pipe_t* handle,
   else
 #endif
     addrlen = strlen(sa.sun_path);
-
 
   if ((size_t)addrlen >= *size) {
     *size = addrlen + 1;
@@ -280,23 +263,18 @@ static int uv__pipe_getsockpeername(const uv_pipe_t* handle,
   return 0;
 }
 
-
-int uv_pipe_getsockname(const uv_pipe_t* handle, char* buffer, size_t* size) {
+int uv_pipe_getsockname(const uv_pipe_t *handle, char *buffer, size_t *size) {
   return uv__pipe_getsockpeername(handle, getsockname, buffer, size);
 }
 
-
-int uv_pipe_getpeername(const uv_pipe_t* handle, char* buffer, size_t* size) {
+int uv_pipe_getpeername(const uv_pipe_t *handle, char *buffer, size_t *size) {
   return uv__pipe_getsockpeername(handle, getpeername, buffer, size);
 }
 
+void uv_pipe_pending_instances(uv_pipe_t *handle, int count) {}
 
-void uv_pipe_pending_instances(uv_pipe_t* handle, int count) {
-}
-
-
-int uv_pipe_pending_count(uv_pipe_t* handle) {
-  uv__stream_queued_fds_t* queued_fds;
+int uv_pipe_pending_count(uv_pipe_t *handle) {
+  uv__stream_queued_fds_t *queued_fds;
 
   if (!handle->ipc)
     return 0;
@@ -311,8 +289,7 @@ int uv_pipe_pending_count(uv_pipe_t* handle) {
   return queued_fds->offset + 1;
 }
 
-
-uv_handle_type uv_pipe_pending_type(uv_pipe_t* handle) {
+uv_handle_type uv_pipe_pending_type(uv_pipe_t *handle) {
   if (!handle->ipc)
     return UV_UNKNOWN_HANDLE;
 
@@ -322,19 +299,17 @@ uv_handle_type uv_pipe_pending_type(uv_pipe_t* handle) {
     return uv__handle_type(handle->accepted_fd);
 }
 
-
-int uv_pipe_chmod(uv_pipe_t* handle, int mode) {
+int uv_pipe_chmod(uv_pipe_t *handle, int mode) {
   unsigned desired_mode;
   struct stat pipe_stat;
-  char* name_buffer;
+  char *name_buffer;
   size_t name_len;
   int r;
 
   if (handle == NULL || uv__stream_fd(handle) == -1)
     return UV_EBADF;
 
-  if (mode != UV_READABLE &&
-      mode != UV_WRITABLE &&
+  if (mode != UV_READABLE && mode != UV_WRITABLE &&
       mode != (UV_WRITABLE | UV_READABLE))
     return UV_EINVAL;
 

@@ -23,12 +23,12 @@
 #include "internal.h"
 #include "spinlock.h"
 
-#include <stdlib.h>
 #include <assert.h>
-#include <unistd.h>
-#include <termios.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <sys/ioctl.h>
+#include <termios.h>
+#include <unistd.h>
 
 #if defined(__MVS__) && !defined(IMAXBEL)
 #define IMAXBEL 0
@@ -52,10 +52,10 @@
  */
 static int isreallyatty(int file) {
   int rc;
- 
+
   rc = !ioctl(file, TXISATTY + 0x81, NULL);
   if (!rc && errno != EBADF)
-      errno = ENOTTY;
+    errno = ENOTTY;
 
   return rc;
 }
@@ -120,7 +120,7 @@ static int uv__tty_is_slave(const int fd) {
   return result;
 }
 
-int uv_tty_init(uv_loop_t* loop, uv_tty_t* tty, int fd, int unused) {
+int uv_tty_init(uv_loop_t *loop, uv_tty_t *tty, int fd, int unused) {
   uv_handle_type type;
   int flags;
   int newfd;
@@ -194,7 +194,7 @@ int uv_tty_init(uv_loop_t* loop, uv_tty_t* tty, int fd, int unused) {
   }
 
 skip:
-  uv__stream_init(loop, (uv_stream_t*) tty, UV_TTY);
+  uv__stream_init(loop, (uv_stream_t *)tty, UV_TTY);
 
   /* If anything fails beyond this point we need to remove the handle from
    * the handle queue, since it was added by uv__handle_init in uv_stream_init.
@@ -204,7 +204,7 @@ skip:
     uv__nonblock(fd, 1);
 
 #if defined(__APPLE__)
-  r = uv__stream_try_select((uv_stream_t*) tty, &fd);
+  r = uv__stream_try_select((uv_stream_t *)tty, &fd);
   if (r) {
     int rc = r;
     if (newfd != -1)
@@ -222,13 +222,13 @@ skip:
   if (mode != O_RDONLY)
     flags |= UV_HANDLE_WRITABLE;
 
-  uv__stream_open((uv_stream_t*) tty, fd, flags);
+  uv__stream_open((uv_stream_t *)tty, fd, flags);
   tty->mode = UV_TTY_MODE_NORMAL;
 
   return 0;
 }
 
-static void uv__tty_make_raw(struct termios* tio) {
+static void uv__tty_make_raw(struct termios *tio) {
   assert(tio != NULL);
 
 #if defined __sun || defined __MVS__
@@ -247,11 +247,11 @@ static void uv__tty_make_raw(struct termios* tio) {
 #endif /* #ifdef __sun */
 }
 
-int uv_tty_set_mode(uv_tty_t* tty, uv_tty_mode_t mode) {
+int uv_tty_set_mode(uv_tty_t *tty, uv_tty_mode_t mode) {
   struct termios tmp;
   int fd;
 
-  if (tty->mode == (int) mode)
+  if (tty->mode == (int)mode)
     return 0;
 
   fd = uv__stream_fd(tty);
@@ -270,19 +270,19 @@ int uv_tty_set_mode(uv_tty_t* tty, uv_tty_mode_t mode) {
 
   tmp = tty->orig_termios;
   switch (mode) {
-    case UV_TTY_MODE_NORMAL:
-      break;
-    case UV_TTY_MODE_RAW:
-      tmp.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-      tmp.c_oflag |= (ONLCR);
-      tmp.c_cflag |= (CS8);
-      tmp.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-      tmp.c_cc[VMIN] = 1;
-      tmp.c_cc[VTIME] = 0;
-      break;
-    case UV_TTY_MODE_IO:
-      uv__tty_make_raw(&tmp);
-      break;
+  case UV_TTY_MODE_NORMAL:
+    break;
+  case UV_TTY_MODE_RAW:
+    tmp.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+    tmp.c_oflag |= (ONLCR);
+    tmp.c_cflag |= (CS8);
+    tmp.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+    tmp.c_cc[VMIN] = 1;
+    tmp.c_cc[VTIME] = 0;
+    break;
+  case UV_TTY_MODE_IO:
+    uv__tty_make_raw(&tmp);
+    break;
   }
 
   /* Apply changes after draining */
@@ -293,8 +293,7 @@ int uv_tty_set_mode(uv_tty_t* tty, uv_tty_mode_t mode) {
   return 0;
 }
 
-
-int uv_tty_get_winsize(uv_tty_t* tty, int* width, int* height) {
+int uv_tty_get_winsize(uv_tty_t *tty, int *width, int *height) {
   struct winsize ws;
   int err;
 
@@ -310,7 +309,6 @@ int uv_tty_get_winsize(uv_tty_t* tty, int* width, int* height) {
 
   return 0;
 }
-
 
 uv_handle_type uv_guess_handle(uv_file file) {
   struct sockaddr sa;
@@ -331,7 +329,7 @@ uv_handle_type uv_guess_handle(uv_file file) {
     return UV_FILE;
 
   if (S_ISCHR(s.st_mode))
-    return UV_FILE;  /* XXX UV_NAMED_PIPE? */
+    return UV_FILE; /* XXX UV_NAMED_PIPE? */
 
   if (S_ISFIFO(s.st_mode))
     return UV_NAMED_PIPE;
@@ -370,7 +368,6 @@ uv_handle_type uv_guess_handle(uv_file file) {
   return UV_UNKNOWN_HANDLE;
 }
 
-
 /* This function is async signal-safe, meaning that it's safe to call from
  * inside a signal handler _unless_ execution was inside uv_tty_set_mode()'s
  * critical section when the signal was raised.
@@ -381,7 +378,7 @@ int uv_tty_reset_mode(void) {
 
   saved_errno = errno;
   if (!uv_spinlock_trylock(&termios_spinlock))
-    return UV_EBUSY;  /* In uv_tty_set_mode(). */
+    return UV_EBUSY; /* In uv_tty_set_mode(). */
 
   err = 0;
   if (orig_termios_fd != -1)
@@ -394,9 +391,6 @@ int uv_tty_reset_mode(void) {
   return err;
 }
 
-void uv_tty_set_vterm_state(uv_tty_vtermstate_t state) {
-}
+void uv_tty_set_vterm_state(uv_tty_vtermstate_t state) {}
 
-int uv_tty_get_vterm_state(uv_tty_vtermstate_t* state) {
-  return UV_ENOTSUP;
-}
+int uv_tty_get_vterm_state(uv_tty_vtermstate_t *state) { return UV_ENOTSUP; }

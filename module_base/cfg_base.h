@@ -2,8 +2,7 @@
 #define cfg_base_h
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 /**
  * config module API tag

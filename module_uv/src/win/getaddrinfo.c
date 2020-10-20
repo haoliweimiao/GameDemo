@@ -21,10 +21,10 @@
 
 #include <assert.h>
 
-#include "uv.h"
+#include "idna.h"
 #include "internal.h"
 #include "req-inl.h"
-#include "idna.h"
+#include "uv.h"
 
 /* EAI_* constants. */
 #include <winsock2.h>
@@ -34,55 +34,62 @@
 
 int uv__getaddrinfo_translate_error(int sys_err) {
   switch (sys_err) {
-    case 0:                       return 0;
-    case WSATRY_AGAIN:            return UV_EAI_AGAIN;
-    case WSAEINVAL:               return UV_EAI_BADFLAGS;
-    case WSANO_RECOVERY:          return UV_EAI_FAIL;
-    case WSAEAFNOSUPPORT:         return UV_EAI_FAMILY;
-    case WSA_NOT_ENOUGH_MEMORY:   return UV_EAI_MEMORY;
-    case WSAHOST_NOT_FOUND:       return UV_EAI_NONAME;
-    case WSATYPE_NOT_FOUND:       return UV_EAI_SERVICE;
-    case WSAESOCKTNOSUPPORT:      return UV_EAI_SOCKTYPE;
-    default:                      return uv_translate_sys_error(sys_err);
+  case 0:
+    return 0;
+  case WSATRY_AGAIN:
+    return UV_EAI_AGAIN;
+  case WSAEINVAL:
+    return UV_EAI_BADFLAGS;
+  case WSANO_RECOVERY:
+    return UV_EAI_FAIL;
+  case WSAEAFNOSUPPORT:
+    return UV_EAI_FAMILY;
+  case WSA_NOT_ENOUGH_MEMORY:
+    return UV_EAI_MEMORY;
+  case WSAHOST_NOT_FOUND:
+    return UV_EAI_NONAME;
+  case WSATYPE_NOT_FOUND:
+    return UV_EAI_SERVICE;
+  case WSAESOCKTNOSUPPORT:
+    return UV_EAI_SOCKTYPE;
+  default:
+    return uv_translate_sys_error(sys_err);
   }
 }
-
 
 /*
  * MinGW is missing this
  */
 #if !defined(_MSC_VER) && !defined(__MINGW64_VERSION_MAJOR)
-  typedef struct addrinfoW {
-    int ai_flags;
-    int ai_family;
-    int ai_socktype;
-    int ai_protocol;
-    size_t ai_addrlen;
-    WCHAR* ai_canonname;
-    struct sockaddr* ai_addr;
-    struct addrinfoW* ai_next;
-  } ADDRINFOW, *PADDRINFOW;
+typedef struct addrinfoW {
+  int ai_flags;
+  int ai_family;
+  int ai_socktype;
+  int ai_protocol;
+  size_t ai_addrlen;
+  WCHAR *ai_canonname;
+  struct sockaddr *ai_addr;
+  struct addrinfoW *ai_next;
+} ADDRINFOW, *PADDRINFOW;
 
-  DECLSPEC_IMPORT int WSAAPI GetAddrInfoW(const WCHAR* node,
-                                          const WCHAR* service,
-                                          const ADDRINFOW* hints,
-                                          PADDRINFOW* result);
+DECLSPEC_IMPORT int WSAAPI GetAddrInfoW(const WCHAR *node, const WCHAR *service,
+                                        const ADDRINFOW *hints,
+                                        PADDRINFOW *result);
 
-  DECLSPEC_IMPORT void WSAAPI FreeAddrInfoW(PADDRINFOW pAddrInfo);
+DECLSPEC_IMPORT void WSAAPI FreeAddrInfoW(PADDRINFOW pAddrInfo);
 #endif
-
 
 /* Adjust size value to be multiple of 4. Use to keep pointer aligned.
  * Do we need different versions of this for different architectures? */
-#define ALIGNED_SIZE(X)     ((((X) + 3) >> 2) << 2)
+#define ALIGNED_SIZE(X) ((((X) + 3) >> 2) << 2)
 
 #ifndef NDIS_IF_MAX_STRING_SIZE
 #define NDIS_IF_MAX_STRING_SIZE IF_MAX_STRING_SIZE
 #endif
 
-static void uv__getaddrinfo_work(struct uv__work* w) {
-  uv_getaddrinfo_t* req;
-  struct addrinfoW* hints;
+static void uv__getaddrinfo_work(struct uv__work *w) {
+  uv_getaddrinfo_t *req;
+  struct addrinfoW *hints;
   int err;
 
   req = container_of(w, uv_getaddrinfo_t, work_req);
@@ -91,7 +98,6 @@ static void uv__getaddrinfo_work(struct uv__work* w) {
   err = GetAddrInfoW(req->node, req->service, hints, &req->addrinfow);
   req->retcode = uv__getaddrinfo_translate_error(err);
 }
-
 
 /*
  * Called from uv_run when complete. Call user specified callback
@@ -102,15 +108,15 @@ static void uv__getaddrinfo_work(struct uv__work* w) {
  * and copy all structs and referenced strings into the one block.
  * Each size calculation is adjusted to avoid unaligned pointers.
  */
-static void uv__getaddrinfo_done(struct uv__work* w, int status) {
-  uv_getaddrinfo_t* req;
+static void uv__getaddrinfo_done(struct uv__work *w, int status) {
+  uv_getaddrinfo_t *req;
   int addrinfo_len = 0;
   int name_len = 0;
   size_t addrinfo_struct_len = ALIGNED_SIZE(sizeof(struct addrinfo));
-  struct addrinfoW* addrinfow_ptr;
-  struct addrinfo* addrinfo_ptr;
-  char* alloc_ptr = NULL;
-  char* cur_ptr = NULL;
+  struct addrinfoW *addrinfow_ptr;
+  struct addrinfo *addrinfo_ptr;
+  char *alloc_ptr = NULL;
+  char *cur_ptr = NULL;
 
   req = container_of(w, uv_getaddrinfo_t, work_req);
 
@@ -128,17 +134,11 @@ static void uv__getaddrinfo_done(struct uv__work* w, int status) {
     /* Convert addrinfoW to addrinfo. First calculate required length. */
     addrinfow_ptr = req->addrinfow;
     while (addrinfow_ptr != NULL) {
-      addrinfo_len += addrinfo_struct_len +
-          ALIGNED_SIZE(addrinfow_ptr->ai_addrlen);
+      addrinfo_len +=
+          addrinfo_struct_len + ALIGNED_SIZE(addrinfow_ptr->ai_addrlen);
       if (addrinfow_ptr->ai_canonname != NULL) {
-        name_len = WideCharToMultiByte(CP_UTF8,
-                                       0,
-                                       addrinfow_ptr->ai_canonname,
-                                       -1,
-                                       NULL,
-                                       0,
-                                       NULL,
-                                       NULL);
+        name_len = WideCharToMultiByte(CP_UTF8, 0, addrinfow_ptr->ai_canonname,
+                                       -1, NULL, 0, NULL, NULL);
         if (name_len == 0) {
           req->retcode = uv_translate_sys_error(GetLastError());
           goto complete;
@@ -149,7 +149,7 @@ static void uv__getaddrinfo_done(struct uv__work* w, int status) {
     }
 
     /* allocate memory for addrinfo results */
-    alloc_ptr = (char*)uv__malloc(addrinfo_len);
+    alloc_ptr = (char *)uv__malloc(addrinfo_len);
 
     /* do conversions */
     if (alloc_ptr != NULL) {
@@ -159,7 +159,7 @@ static void uv__getaddrinfo_done(struct uv__work* w, int status) {
       while (addrinfow_ptr != NULL) {
         /* copy addrinfo struct data */
         assert(cur_ptr + addrinfo_struct_len <= alloc_ptr + addrinfo_len);
-        addrinfo_ptr = (struct addrinfo*)cur_ptr;
+        addrinfo_ptr = (struct addrinfo *)cur_ptr;
         addrinfo_ptr->ai_family = addrinfow_ptr->ai_family;
         addrinfo_ptr->ai_socktype = addrinfow_ptr->ai_socktype;
         addrinfo_ptr->ai_protocol = addrinfow_ptr->ai_protocol;
@@ -176,30 +176,19 @@ static void uv__getaddrinfo_done(struct uv__work* w, int status) {
           assert(cur_ptr + addrinfo_ptr->ai_addrlen <=
                  alloc_ptr + addrinfo_len);
           memcpy(cur_ptr, addrinfow_ptr->ai_addr, addrinfo_ptr->ai_addrlen);
-          addrinfo_ptr->ai_addr = (struct sockaddr*)cur_ptr;
+          addrinfo_ptr->ai_addr = (struct sockaddr *)cur_ptr;
           cur_ptr += ALIGNED_SIZE(addrinfo_ptr->ai_addrlen);
         }
 
         /* convert canonical name to UTF-8 */
         if (addrinfow_ptr->ai_canonname != NULL) {
-          name_len = WideCharToMultiByte(CP_UTF8,
-                                         0,
-                                         addrinfow_ptr->ai_canonname,
-                                         -1,
-                                         NULL,
-                                         0,
-                                         NULL,
-                                         NULL);
+          name_len = WideCharToMultiByte(
+              CP_UTF8, 0, addrinfow_ptr->ai_canonname, -1, NULL, 0, NULL, NULL);
           assert(name_len > 0);
           assert(cur_ptr + name_len <= alloc_ptr + addrinfo_len);
-          name_len = WideCharToMultiByte(CP_UTF8,
-                                         0,
-                                         addrinfow_ptr->ai_canonname,
-                                         -1,
-                                         cur_ptr,
-                                         name_len,
-                                         NULL,
-                                         NULL);
+          name_len =
+              WideCharToMultiByte(CP_UTF8, 0, addrinfow_ptr->ai_canonname, -1,
+                                  cur_ptr, name_len, NULL, NULL);
           assert(name_len > 0);
           addrinfo_ptr->ai_canonname = cur_ptr;
           cur_ptr += ALIGNED_SIZE(name_len);
@@ -209,10 +198,10 @@ static void uv__getaddrinfo_done(struct uv__work* w, int status) {
         /* set next ptr */
         addrinfow_ptr = addrinfow_ptr->ai_next;
         if (addrinfow_ptr != NULL) {
-          addrinfo_ptr->ai_next = (struct addrinfo*)cur_ptr;
+          addrinfo_ptr->ai_next = (struct addrinfo *)cur_ptr;
         }
       }
-      req->addrinfo = (struct addrinfo*)alloc_ptr;
+      req->addrinfo = (struct addrinfo *)alloc_ptr;
     } else {
       req->retcode = UV_EAI_MEMORY;
     }
@@ -232,14 +221,12 @@ complete:
     req->getaddrinfo_cb(req, req->retcode, req->addrinfo);
 }
 
-
-void uv_freeaddrinfo(struct addrinfo* ai) {
-  char* alloc_ptr = (char*)ai;
+void uv_freeaddrinfo(struct addrinfo *ai) {
+  char *alloc_ptr = (char *)ai;
 
   /* release copied result memory */
   uv__free(alloc_ptr);
 }
-
 
 /*
  * Entry point for getaddrinfo
@@ -254,17 +241,14 @@ void uv_freeaddrinfo(struct addrinfo* ai) {
  * and copy all structs and referenced strings into the one block.
  * Each size calculation is adjusted to avoid unaligned pointers.
  */
-int uv_getaddrinfo(uv_loop_t* loop,
-                   uv_getaddrinfo_t* req,
-                   uv_getaddrinfo_cb getaddrinfo_cb,
-                   const char* node,
-                   const char* service,
-                   const struct addrinfo* hints) {
+int uv_getaddrinfo(uv_loop_t *loop, uv_getaddrinfo_t *req,
+                   uv_getaddrinfo_cb getaddrinfo_cb, const char *node,
+                   const char *service, const struct addrinfo *hints) {
   char hostname_ascii[256];
   int nodesize = 0;
   int servicesize = 0;
   int hintssize = 0;
-  char* alloc_ptr = NULL;
+  char *alloc_ptr = NULL;
   int err;
   long rc;
 
@@ -280,14 +264,13 @@ int uv_getaddrinfo(uv_loop_t* loop,
 
   /* calculate required memory size for all input values */
   if (node != NULL) {
-    rc = uv__idna_toascii(node,
-                          node + strlen(node),
-                          hostname_ascii,
+    rc = uv__idna_toascii(node, node + strlen(node), hostname_ascii,
                           hostname_ascii + sizeof(hostname_ascii));
     if (rc < 0)
       return rc;
-    nodesize = ALIGNED_SIZE(MultiByteToWideChar(CP_UTF8, 0, hostname_ascii,
-                                                -1, NULL, 0) * sizeof(WCHAR));
+    nodesize = ALIGNED_SIZE(
+        MultiByteToWideChar(CP_UTF8, 0, hostname_ascii, -1, NULL, 0) *
+        sizeof(WCHAR));
     if (nodesize == 0) {
       err = GetLastError();
       goto error;
@@ -296,13 +279,8 @@ int uv_getaddrinfo(uv_loop_t* loop,
   }
 
   if (service != NULL) {
-    servicesize = ALIGNED_SIZE(MultiByteToWideChar(CP_UTF8,
-                                                   0,
-                                                   service,
-                                                   -1,
-                                                   NULL,
-                                                   0) *
-                               sizeof(WCHAR));
+    servicesize = ALIGNED_SIZE(
+        MultiByteToWideChar(CP_UTF8, 0, service, -1, NULL, 0) * sizeof(WCHAR));
     if (servicesize == 0) {
       err = GetLastError();
       goto error;
@@ -313,24 +291,20 @@ int uv_getaddrinfo(uv_loop_t* loop,
   }
 
   /* allocate memory for inputs, and partition it as needed */
-  alloc_ptr = (char*)uv__malloc(nodesize + servicesize + hintssize);
+  alloc_ptr = (char *)uv__malloc(nodesize + servicesize + hintssize);
   if (!alloc_ptr) {
     err = WSAENOBUFS;
     goto error;
   }
 
   /* save alloc_ptr now so we can free if error */
-  req->alloc = (void*)alloc_ptr;
+  req->alloc = (void *)alloc_ptr;
 
   /* Convert node string to UTF16 into allocated memory and save pointer in the
    * request. */
   if (node != NULL) {
-    req->node = (WCHAR*)alloc_ptr;
-    if (MultiByteToWideChar(CP_UTF8,
-                            0,
-                            node,
-                            -1,
-                            (WCHAR*) alloc_ptr,
+    req->node = (WCHAR *)alloc_ptr;
+    if (MultiByteToWideChar(CP_UTF8, 0, node, -1, (WCHAR *)alloc_ptr,
                             nodesize / sizeof(WCHAR)) == 0) {
       err = GetLastError();
       goto error;
@@ -343,12 +317,8 @@ int uv_getaddrinfo(uv_loop_t* loop,
   /* Convert service string to UTF16 into allocated memory and save pointer in
    * the req. */
   if (service != NULL) {
-    req->service = (WCHAR*)alloc_ptr;
-    if (MultiByteToWideChar(CP_UTF8,
-                            0,
-                            service,
-                            -1,
-                            (WCHAR*) alloc_ptr,
+    req->service = (WCHAR *)alloc_ptr;
+    if (MultiByteToWideChar(CP_UTF8, 0, service, -1, (WCHAR *)alloc_ptr,
                             servicesize / sizeof(WCHAR)) == 0) {
       err = GetLastError();
       goto error;
@@ -360,7 +330,7 @@ int uv_getaddrinfo(uv_loop_t* loop,
 
   /* copy hints to allocated memory and save pointer in req */
   if (hints != NULL) {
-    req->addrinfow = (struct addrinfoW*)alloc_ptr;
+    req->addrinfow = (struct addrinfoW *)alloc_ptr;
     req->addrinfow->ai_family = hints->ai_family;
     req->addrinfow->ai_socktype = hints->ai_socktype;
     req->addrinfow->ai_protocol = hints->ai_protocol;
@@ -376,11 +346,8 @@ int uv_getaddrinfo(uv_loop_t* loop,
   uv__req_register(loop, req);
 
   if (getaddrinfo_cb) {
-    uv__work_submit(loop,
-                    &req->work_req,
-                    UV__WORK_SLOW_IO,
-                    uv__getaddrinfo_work,
-                    uv__getaddrinfo_done);
+    uv__work_submit(loop, &req->work_req, UV__WORK_SLOW_IO,
+                    uv__getaddrinfo_work, uv__getaddrinfo_done);
     return 0;
   } else {
     uv__getaddrinfo_work(&req->work_req);
@@ -396,7 +363,7 @@ error:
   return uv_translate_sys_error(err);
 }
 
-int uv_if_indextoname(unsigned int ifindex, char* buffer, size_t* size) {
+int uv_if_indextoname(unsigned int ifindex, char *buffer, size_t *size) {
   NET_LUID luid;
   wchar_t wname[NDIS_IF_MAX_STRING_SIZE + 1]; /* Add one for the NUL. */
   DWORD bufsize;
@@ -426,14 +393,8 @@ int uv_if_indextoname(unsigned int ifindex, char* buffer, size_t* size) {
   }
 
   /* Convert to UTF-8 */
-  bufsize = WideCharToMultiByte(CP_UTF8,
-                                0,
-                                wname,
-                                -1,
-                                buffer,
-                                *size,
-                                NULL,
-                                NULL);
+  bufsize =
+      WideCharToMultiByte(CP_UTF8, 0, wname, -1, buffer, *size, NULL, NULL);
 
   if (bufsize == 0)
     return uv_translate_sys_error(GetLastError());
@@ -442,7 +403,7 @@ int uv_if_indextoname(unsigned int ifindex, char* buffer, size_t* size) {
   return 0;
 }
 
-int uv_if_indextoiid(unsigned int ifindex, char* buffer, size_t* size) {
+int uv_if_indextoiid(unsigned int ifindex, char *buffer, size_t *size) {
   int r;
 
   if (buffer == NULL || size == NULL || *size == 0)
@@ -453,7 +414,7 @@ int uv_if_indextoiid(unsigned int ifindex, char* buffer, size_t* size) {
   if (r < 0)
     return uv_translate_sys_error(r);
 
-  if (r >= (int) *size) {
+  if (r >= (int)*size) {
     *size = r + 1;
     return UV_ENOBUFS;
   }

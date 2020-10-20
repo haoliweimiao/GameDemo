@@ -21,26 +21,23 @@
 
 #include <assert.h>
 
-#include "uv.h"
-#include "internal.h"
 #include "atomicops-inl.h"
 #include "handle-inl.h"
+#include "internal.h"
 #include "req-inl.h"
+#include "uv.h"
 
-
-void uv_async_endgame(uv_loop_t* loop, uv_async_t* handle) {
-  if (handle->flags & UV_HANDLE_CLOSING &&
-      !handle->async_sent) {
+void uv_async_endgame(uv_loop_t *loop, uv_async_t *handle) {
+  if (handle->flags & UV_HANDLE_CLOSING && !handle->async_sent) {
     assert(!(handle->flags & UV_HANDLE_CLOSED));
     uv__handle_close(handle);
   }
 }
 
+int uv_async_init(uv_loop_t *loop, uv_async_t *handle, uv_async_cb async_cb) {
+  uv_req_t *req;
 
-int uv_async_init(uv_loop_t* loop, uv_async_t* handle, uv_async_cb async_cb) {
-  uv_req_t* req;
-
-  uv__handle_init(loop, (uv_handle_t*) handle, UV_ASYNC);
+  uv__handle_init(loop, (uv_handle_t *)handle, UV_ASYNC);
   handle->async_sent = 0;
   handle->async_cb = async_cb;
 
@@ -53,18 +50,16 @@ int uv_async_init(uv_loop_t* loop, uv_async_t* handle, uv_async_cb async_cb) {
   return 0;
 }
 
-
-void uv_async_close(uv_loop_t* loop, uv_async_t* handle) {
-  if (!((uv_async_t*)handle)->async_sent) {
-    uv_want_endgame(loop, (uv_handle_t*) handle);
+void uv_async_close(uv_loop_t *loop, uv_async_t *handle) {
+  if (!((uv_async_t *)handle)->async_sent) {
+    uv_want_endgame(loop, (uv_handle_t *)handle);
   }
 
   uv__handle_closing(handle);
 }
 
-
-int uv_async_send(uv_async_t* handle) {
-  uv_loop_t* loop = handle->loop;
+int uv_async_send(uv_async_t *handle) {
+  uv_loop_t *loop = handle->loop;
 
   if (handle->type != UV_ASYNC) {
     /* Can't set errno because that's not thread-safe. */
@@ -82,16 +77,15 @@ int uv_async_send(uv_async_t* handle) {
   return 0;
 }
 
-
-void uv_process_async_wakeup_req(uv_loop_t* loop, uv_async_t* handle,
-    uv_req_t* req) {
+void uv_process_async_wakeup_req(uv_loop_t *loop, uv_async_t *handle,
+                                 uv_req_t *req) {
   assert(handle->type == UV_ASYNC);
   assert(req->type == UV_WAKEUP);
 
   handle->async_sent = 0;
 
   if (handle->flags & UV_HANDLE_CLOSING) {
-    uv_want_endgame(loop, (uv_handle_t*)handle);
+    uv_want_endgame(loop, (uv_handle_t *)handle);
   } else if (handle->async_cb != NULL) {
     handle->async_cb(handle);
   }

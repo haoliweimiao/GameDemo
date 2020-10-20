@@ -22,17 +22,17 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
-#include <sys/sysctl.h>
-#include <sys/types.h>
-#include <sys/event.h>
-#include <sys/time.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <sys/event.h>
+#include <sys/sysctl.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 /*
  * Required on
@@ -42,13 +42,12 @@
  * http://www.boost.org/doc/libs/1_61_0/boost/asio/detail/kqueue_reactor.hpp
  */
 #ifndef EV_OOBAND
-#define EV_OOBAND  EV_FLAG1
+#define EV_OOBAND EV_FLAG1
 #endif
 
-static void uv__fs_event(uv_loop_t* loop, uv__io_t* w, unsigned int fflags);
+static void uv__fs_event(uv_loop_t *loop, uv__io_t *w, unsigned int fflags);
 
-
-int uv__kqueue_init(uv_loop_t* loop) {
+int uv__kqueue_init(uv_loop_t *loop) {
   loop->backend_fd = kqueue();
   if (loop->backend_fd == -1)
     return UV__ERR(errno);
@@ -58,12 +57,11 @@ int uv__kqueue_init(uv_loop_t* loop) {
   return 0;
 }
 
-
 #if defined(__APPLE__) && MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 static int uv__has_forked_with_cfrunloop;
 #endif
 
-int uv__io_fork(uv_loop_t* loop) {
+int uv__io_fork(uv_loop_t *loop) {
   int err;
   loop->backend_fd = -1;
   err = uv__kqueue_init(loop);
@@ -90,8 +88,7 @@ int uv__io_fork(uv_loop_t* loop) {
   return err;
 }
 
-
-int uv__io_check_fd(uv_loop_t* loop, int fd) {
+int uv__io_check_fd(uv_loop_t *loop, int fd) {
   struct kevent ev;
   int rc;
 
@@ -108,16 +105,15 @@ int uv__io_check_fd(uv_loop_t* loop, int fd) {
   return rc;
 }
 
-
-void uv__io_poll(uv_loop_t* loop, int timeout) {
+void uv__io_poll(uv_loop_t *loop, int timeout) {
   struct kevent events[1024];
-  struct kevent* ev;
+  struct kevent *ev;
   struct timespec spec;
   unsigned int nevents;
   unsigned int revents;
-  QUEUE* q;
-  uv__io_t* w;
-  sigset_t* pset;
+  QUEUE *q;
+  uv__io_t *w;
+  sigset_t *pset;
   sigset_t set;
   uint64_t base;
   uint64_t diff;
@@ -147,7 +143,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     w = QUEUE_DATA(q, uv__io_t, watcher_queue);
     assert(w->pevents != 0);
     assert(w->fd >= 0);
-    assert(w->fd < (int) loop->nwatchers);
+    assert(w->fd < (int)loop->nwatchers);
 
     if ((w->events & POLLIN) == 0 && (w->pevents & POLLIN) != 0) {
       filter = EVFILT_READ;
@@ -156,8 +152,8 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
 
       if (w->cb == uv__fs_event) {
         filter = EVFILT_VNODE;
-        fflags = NOTE_ATTRIB | NOTE_WRITE  | NOTE_RENAME
-               | NOTE_DELETE | NOTE_EXTEND | NOTE_REVOKE;
+        fflags = NOTE_ATTRIB | NOTE_WRITE | NOTE_RENAME | NOTE_DELETE |
+                 NOTE_EXTEND | NOTE_REVOKE;
         op = EV_ADD | EV_ONESHOT; /* Stop the event from firing repeatedly. */
       }
 
@@ -180,7 +176,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       }
     }
 
-   if ((w->events & UV__POLLPRI) == 0 && (w->pevents & UV__POLLPRI) != 0) {
+    if ((w->events & UV__POLLPRI) == 0 && (w->pevents & UV__POLLPRI) != 0) {
       EV_SET(events + nevents, w->fd, EV_OOBAND, EV_ADD, 0, 0, 0);
 
       if (++nevents == ARRAY_SIZE(events)) {
@@ -227,11 +223,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     if (pset != NULL)
       pthread_sigmask(SIG_BLOCK, pset, NULL);
 
-    nfds = kevent(loop->backend_fd,
-                  events,
-                  nevents,
-                  events,
-                  ARRAY_SIZE(events),
+    nfds = kevent(loop->backend_fd, events, nevents, events, ARRAY_SIZE(events),
                   timeout == -1 ? NULL : &spec);
 
     if (pset != NULL)
@@ -280,8 +272,8 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     nevents = 0;
 
     assert(loop->watchers != NULL);
-    loop->watchers[loop->nwatchers] = (void*) events;
-    loop->watchers[loop->nwatchers + 1] = (void*) (uintptr_t) nfds;
+    loop->watchers[loop->nwatchers] = (void *)events;
+    loop->watchers[loop->nwatchers + 1] = (void *)(uintptr_t)nfds;
     for (i = 0; i < nfds; i++) {
       ev = events + i;
       fd = ev->ident;
@@ -392,7 +384,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     loop->watchers[loop->nwatchers + 1] = NULL;
 
     if (have_signals != 0)
-      return;  /* Event loop should cycle now so don't poll again. */
+      return; /* Event loop should cycle now so don't poll again. */
 
     if (nevents != 0) {
       if (nfds == ARRAY_SIZE(events) && --count != 0) {
@@ -409,43 +401,41 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     if (timeout == -1)
       continue;
 
-update_timeout:
+  update_timeout:
     assert(timeout > 0);
 
     diff = loop->time - base;
-    if (diff >= (uint64_t) timeout)
+    if (diff >= (uint64_t)timeout)
       return;
 
     timeout -= diff;
   }
 }
 
-
-void uv__platform_invalidate_fd(uv_loop_t* loop, int fd) {
-  struct kevent* events;
+void uv__platform_invalidate_fd(uv_loop_t *loop, int fd) {
+  struct kevent *events;
   uintptr_t i;
   uintptr_t nfds;
 
   assert(loop->watchers != NULL);
   assert(fd >= 0);
 
-  events = (struct kevent*) loop->watchers[loop->nwatchers];
-  nfds = (uintptr_t) loop->watchers[loop->nwatchers + 1];
+  events = (struct kevent *)loop->watchers[loop->nwatchers];
+  nfds = (uintptr_t)loop->watchers[loop->nwatchers + 1];
   if (events == NULL)
     return;
 
   /* Invalidate events with same file descriptor */
   for (i = 0; i < nfds; i++)
-    if ((int) events[i].ident == fd)
+    if ((int)events[i].ident == fd)
       events[i].ident = -1;
 }
 
-
-static void uv__fs_event(uv_loop_t* loop, uv__io_t* w, unsigned int fflags) {
-  uv_fs_event_t* handle;
+static void uv__fs_event(uv_loop_t *loop, uv__io_t *w, unsigned int fflags) {
+  uv_fs_event_t *handle;
   struct kevent ev;
   int events;
-  const char* path;
+  const char *path;
 #if defined(F_GETPATH)
   /* MAXPATHLEN == PATH_MAX but the former is what XNU calls it internally. */
   char pathbuf[MAXPATHLEN];
@@ -473,8 +463,8 @@ static void uv__fs_event(uv_loop_t* loop, uv__io_t* w, unsigned int fflags) {
     return;
 
   /* Watcher operates in one-shot mode, re-arm it. */
-  fflags = NOTE_ATTRIB | NOTE_WRITE  | NOTE_RENAME
-         | NOTE_DELETE | NOTE_EXTEND | NOTE_REVOKE;
+  fflags = NOTE_ATTRIB | NOTE_WRITE | NOTE_RENAME | NOTE_DELETE | NOTE_EXTEND |
+           NOTE_REVOKE;
 
   EV_SET(&ev, w->fd, EVFILT_VNODE, EV_ADD | EV_ONESHOT, fflags, 0, 0);
 
@@ -482,17 +472,13 @@ static void uv__fs_event(uv_loop_t* loop, uv__io_t* w, unsigned int fflags) {
     abort();
 }
 
-
-int uv_fs_event_init(uv_loop_t* loop, uv_fs_event_t* handle) {
-  uv__handle_init(loop, (uv_handle_t*)handle, UV_FS_EVENT);
+int uv_fs_event_init(uv_loop_t *loop, uv_fs_event_t *handle) {
+  uv__handle_init(loop, (uv_handle_t *)handle, UV_FS_EVENT);
   return 0;
 }
 
-
-int uv_fs_event_start(uv_fs_event_t* handle,
-                      uv_fs_event_cb cb,
-                      const char* path,
-                      unsigned int flags) {
+int uv_fs_event_start(uv_fs_event_t *handle, uv_fs_event_cb cb,
+                      const char *path, unsigned int flags) {
   int fd;
 #if defined(__APPLE__) && MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
   struct stat statbuf;
@@ -551,8 +537,7 @@ fallback:
   return 0;
 }
 
-
-int uv_fs_event_stop(uv_fs_event_t* handle) {
+int uv_fs_event_stop(uv_fs_event_t *handle) {
   int r;
   r = 0;
 
@@ -579,7 +564,4 @@ int uv_fs_event_stop(uv_fs_event_t* handle) {
   return r;
 }
 
-
-void uv__fs_event_close(uv_fs_event_t* handle) {
-  uv_fs_event_stop(handle);
-}
+void uv__fs_event_close(uv_fs_event_t *handle) { uv_fs_event_stop(handle); }

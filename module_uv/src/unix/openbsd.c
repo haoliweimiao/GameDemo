@@ -21,12 +21,12 @@
 #include "uv.h"
 #include "internal.h"
 
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <sys/sched.h>
-#include <sys/time.h>
 #include <sys/sysctl.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 #include <errno.h>
 #include <fcntl.h>
@@ -35,30 +35,24 @@
 #include <string.h>
 #include <unistd.h>
 
+int uv__platform_loop_init(uv_loop_t *loop) { return uv__kqueue_init(loop); }
 
-int uv__platform_loop_init(uv_loop_t* loop) {
-  return uv__kqueue_init(loop);
-}
-
-
-void uv__platform_loop_delete(uv_loop_t* loop) {
-}
-
+void uv__platform_loop_delete(uv_loop_t *loop) {}
 
 void uv_loadavg(double avg[3]) {
   struct loadavg info;
   size_t size = sizeof(info);
   int which[] = {CTL_VM, VM_LOADAVG};
 
-  if (sysctl(which, ARRAY_SIZE(which), &info, &size, NULL, 0) < 0) return;
+  if (sysctl(which, ARRAY_SIZE(which), &info, &size, NULL, 0) < 0)
+    return;
 
-  avg[0] = (double) info.ldavg[0] / info.fscale;
-  avg[1] = (double) info.ldavg[1] / info.fscale;
-  avg[2] = (double) info.ldavg[2] / info.fscale;
+  avg[0] = (double)info.ldavg[0] / info.fscale;
+  avg[1] = (double)info.ldavg[1] / info.fscale;
+  avg[2] = (double)info.ldavg[2] / info.fscale;
 }
 
-
-int uv_exepath(char* buffer, size_t* size) {
+int uv_exepath(char *buffer, size_t *size) {
   int mib[4];
   char **argsbuf = NULL;
   size_t argsbuf_size = 100U;
@@ -90,7 +84,7 @@ int uv_exepath(char* buffer, size_t* size) {
   }
 
   if (argsbuf[0] == NULL) {
-    err = UV_EINVAL;  /* FIXME(bnoordhuis) More appropriate error. */
+    err = UV_EINVAL; /* FIXME(bnoordhuis) More appropriate error. */
     goto out;
   }
 
@@ -109,7 +103,6 @@ out:
   return err;
 }
 
-
 uint64_t uv_get_free_memory(void) {
   struct uvmexp info;
   size_t size = sizeof(info);
@@ -118,9 +111,8 @@ uint64_t uv_get_free_memory(void) {
   if (sysctl(which, ARRAY_SIZE(which), &info, &size, NULL, 0))
     return UV__ERR(errno);
 
-  return (uint64_t) info.free * sysconf(_SC_PAGESIZE);
+  return (uint64_t)info.free * sysconf(_SC_PAGESIZE);
 }
-
 
 uint64_t uv_get_total_memory(void) {
   uint64_t info;
@@ -130,16 +122,14 @@ uint64_t uv_get_total_memory(void) {
   if (sysctl(which, ARRAY_SIZE(which), &info, &size, NULL, 0))
     return UV__ERR(errno);
 
-  return (uint64_t) info;
+  return (uint64_t)info;
 }
-
 
 uint64_t uv_get_constrained_memory(void) {
-  return 0;  /* Memory constraints are unknown. */
+  return 0; /* Memory constraints are unknown. */
 }
 
-
-int uv_resident_set_memory(size_t* rss) {
+int uv_resident_set_memory(size_t *rss) {
   struct kinfo_proc kinfo;
   size_t page_size = getpagesize();
   size_t size = sizeof(struct kinfo_proc);
@@ -159,8 +149,7 @@ int uv_resident_set_memory(size_t* rss) {
   return 0;
 }
 
-
-int uv_uptime(double* uptime) {
+int uv_uptime(double *uptime) {
   time_t now;
   struct timeval info;
   size_t size = sizeof(info);
@@ -175,18 +164,17 @@ int uv_uptime(double* uptime) {
   return 0;
 }
 
-
-int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
+int uv_cpu_info(uv_cpu_info_t **cpu_infos, int *count) {
   unsigned int ticks = (unsigned int)sysconf(_SC_CLK_TCK),
                multiplier = ((uint64_t)1000L / ticks), cpuspeed;
   uint64_t info[CPUSTATES];
   char model[512];
   int numcpus = 1;
-  int which[] = {CTL_HW,HW_MODEL};
-  int percpu[] = {CTL_KERN,KERN_CPTIME2,0};
+  int which[] = {CTL_HW, HW_MODEL};
+  int percpu[] = {CTL_KERN, KERN_CPTIME2, 0};
   size_t size;
   int i, j;
-  uv_cpu_info_t* cpu_info;
+  uv_cpu_info_t *cpu_info;
 
   size = sizeof(model);
   if (sysctl(which, ARRAY_SIZE(which), &model, &size, NULL, 0))

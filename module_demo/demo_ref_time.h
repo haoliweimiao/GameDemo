@@ -9,8 +9,7 @@
 #define demo_ref_time_h
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
@@ -21,7 +20,5 @@ void demo_ref_time();
 #ifdef __cplusplus
 }
 #endif
-
-
 
 #endif /* demo_ref_time_h */

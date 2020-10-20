@@ -23,22 +23,21 @@
 #include "internal.h"
 
 #include <string.h>
-#include <sys/process.h>
-#include <sys/neutrino.h>
 #include <sys/memmsg.h>
-#include <sys/syspage.h>
+#include <sys/neutrino.h>
+#include <sys/process.h>
 #include <sys/procfs.h>
+#include <sys/syspage.h>
 
-static void
-get_mem_info(uint64_t* totalmem, uint64_t* freemem) {
+static void get_mem_info(uint64_t *totalmem, uint64_t *freemem) {
   mem_info_t msg;
 
   memset(&msg, 0, sizeof(msg));
   msg.i.type = _MEM_INFO;
   msg.i.fd = -1;
 
-  if (MsgSend(MEMMGR_COID, &msg.i, sizeof(msg.i), &msg.o, sizeof(msg.o))
-      != -1) {
+  if (MsgSend(MEMMGR_COID, &msg.i, sizeof(msg.i), &msg.o, sizeof(msg.o)) !=
+      -1) {
     *totalmem = msg.o.info.__posix_tmi_total;
     *freemem = msg.o.info.posix_tmi_length;
   } else {
@@ -47,15 +46,13 @@ get_mem_info(uint64_t* totalmem, uint64_t* freemem) {
   }
 }
 
-
 void uv_loadavg(double avg[3]) {
   avg[0] = 0.0;
   avg[1] = 0.0;
   avg[2] = 0.0;
 }
 
-
-int uv_exepath(char* buffer, size_t* size) {
+int uv_exepath(char *buffer, size_t *size) {
   char path[PATH_MAX];
   if (buffer == NULL || size == NULL || *size == 0)
     return UV_EINVAL;
@@ -66,14 +63,12 @@ int uv_exepath(char* buffer, size_t* size) {
   return 0;
 }
 
-
 uint64_t uv_get_free_memory(void) {
   uint64_t totalmem;
   uint64_t freemem;
   get_mem_info(&totalmem, &freemem);
   return freemem;
 }
-
 
 uint64_t uv_get_total_memory(void) {
   uint64_t totalmem;
@@ -82,13 +77,9 @@ uint64_t uv_get_total_memory(void) {
   return totalmem;
 }
 
+uint64_t uv_get_constrained_memory(void) { return 0; }
 
-uint64_t uv_get_constrained_memory(void) {
-  return 0;
-}
-
-
-int uv_resident_set_memory(size_t* rss) {
+int uv_resident_set_memory(size_t *rss) {
   int fd;
   procfs_asinfo asinfo;
 
@@ -106,19 +97,17 @@ int uv_resident_set_memory(size_t* rss) {
   return 0;
 }
 
-
-int uv_uptime(double* uptime) {
-  struct qtime_entry* qtime = _SYSPAGE_ENTRY(_syspage_ptr, qtime);
+int uv_uptime(double *uptime) {
+  struct qtime_entry *qtime = _SYSPAGE_ENTRY(_syspage_ptr, qtime);
   *uptime = (qtime->nsec / 1000000000.0);
   return 0;
 }
 
-
-int uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
-  struct cpuinfo_entry* cpuinfo =
-    (struct cpuinfo_entry*)_SYSPAGE_ENTRY(_syspage_ptr, new_cpuinfo);
+int uv_cpu_info(uv_cpu_info_t **cpu_infos, int *count) {
+  struct cpuinfo_entry *cpuinfo =
+      (struct cpuinfo_entry *)_SYSPAGE_ENTRY(_syspage_ptr, new_cpuinfo);
   size_t cpuinfo_size = _SYSPAGE_ELEMENT_SIZE(_syspage_ptr, cpuinfo);
-  struct strings_entry* strings = _SYSPAGE_ENTRY(_syspage_ptr, strings);
+  struct strings_entry *strings = _SYSPAGE_ENTRY(_syspage_ptr, strings);
   int num_cpus = _syspage_ptr->num_cpu;
   int i;
 

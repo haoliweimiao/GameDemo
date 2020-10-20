@@ -11,10 +11,11 @@
 
 int64_t counter_idle_basic = 0;
 
-void wait_for_a_while(uv_idle_t* handle) {
+void wait_for_a_while(uv_idle_t *handle) {
     counter_idle_basic++;
     
-    if (counter_idle_basic >= 10e6){
+    if (counter_idle_basic >= 1000) {
+        printf("wait_for_a_while counter_idle_basic>=1000\n");
         uv_idle_stop(handle);
     }
 }
@@ -22,7 +23,7 @@ void wait_for_a_while(uv_idle_t* handle) {
 /**
  * idle basic demo
  */
-void demo_idle_basic(){
+void demo_idle_basic() {
     uv_idle_t idler;
     
     uv_idle_init(uv_default_loop(), &idler);

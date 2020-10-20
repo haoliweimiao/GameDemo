@@ -22,7 +22,7 @@
 #include "uv-common.h"
 
 #if !defined(_WIN32)
-# include "unix/internal.h"
+#include "unix/internal.h"
 #endif
 
 #include <stdlib.h>
@@ -35,7 +35,7 @@ static uv_mutex_t mutex;
 static unsigned int idle_threads;
 static unsigned int slow_io_work_running;
 static unsigned int nthreads;
-static uv_thread_t* threads;
+static uv_thread_t *threads;
 static uv_thread_t default_threads[4];
 static QUEUE exit_message;
 static QUEUE wq;
@@ -46,20 +46,17 @@ static unsigned int slow_work_thread_threshold(void) {
   return (nthreads + 1) / 2;
 }
 
-static void uv__cancelled(struct uv__work* w) {
-  abort();
-}
-
+static void uv__cancelled(struct uv__work *w) { abort(); }
 
 /* To avoid deadlock with uv_cancel() it's crucial that the worker
  * never holds the global mutex and the loop-local mutex at the same time.
  */
-static void worker(void* arg) {
-  struct uv__work* w;
-  QUEUE* q;
+static void worker(void *arg) {
+  struct uv__work *w;
+  QUEUE *q;
   int is_slow_work;
 
-  uv_sem_post((uv_sem_t*) arg);
+  uv_sem_post((uv_sem_t *)arg);
   arg = NULL;
 
   uv_mutex_lock(&mutex);
@@ -85,7 +82,7 @@ static void worker(void* arg) {
     }
 
     QUEUE_REMOVE(q);
-    QUEUE_INIT(q);  /* Signal uv_cancel() that the work req is executing. */
+    QUEUE_INIT(q); /* Signal uv_cancel() that the work req is executing. */
 
     is_slow_work = 0;
     if (q == &run_slow_work_message) {
@@ -122,8 +119,8 @@ static void worker(void* arg) {
     w->work(w);
 
     uv_mutex_lock(&w->loop->wq_mutex);
-    w->work = NULL;  /* Signal uv_cancel() that the work req is done
-                        executing. */
+    w->work = NULL; /* Signal uv_cancel() that the work req is done
+                       executing. */
     QUEUE_INSERT_TAIL(&w->loop->wq, &w->wq);
     uv_async_send(&w->loop->wq_async);
     uv_mutex_unlock(&w->loop->wq_mutex);
@@ -138,8 +135,7 @@ static void worker(void* arg) {
   }
 }
 
-
-static void post(QUEUE* q, enum uv__work_kind kind) {
+static void post(QUEUE *q, enum uv__work_kind kind) {
   uv_mutex_lock(&mutex);
   if (kind == UV__WORK_SLOW_IO) {
     /* Insert into a separate queue. */
@@ -158,7 +154,6 @@ static void post(QUEUE* q, enum uv__work_kind kind) {
     uv_cond_signal(&cond);
   uv_mutex_unlock(&mutex);
 }
-
 
 void uv__threadpool_cleanup(void) {
 #ifndef _WIN32
@@ -184,10 +179,9 @@ void uv__threadpool_cleanup(void) {
 #endif
 }
 
-
 static void init_threads(void) {
   unsigned int i;
-  const char* val;
+  const char *val;
   uv_sem_t sem;
 
   nthreads = ARRAY_SIZE(default_threads);
@@ -231,14 +225,12 @@ static void init_threads(void) {
   uv_sem_destroy(&sem);
 }
 
-
 #ifndef _WIN32
 static void reset_once(void) {
   uv_once_t child_once = UV_ONCE_INIT;
   memcpy(&once, &child_once, sizeof(child_once));
 }
 #endif
-
 
 static void init_once(void) {
 #ifndef _WIN32
@@ -252,12 +244,9 @@ static void init_once(void) {
   init_threads();
 }
 
-
-void uv__work_submit(uv_loop_t* loop,
-                     struct uv__work* w,
-                     enum uv__work_kind kind,
-                     void (*work)(struct uv__work* w),
-                     void (*done)(struct uv__work* w, int status)) {
+void uv__work_submit(uv_loop_t *loop, struct uv__work *w,
+                     enum uv__work_kind kind, void (*work)(struct uv__work *w),
+                     void (*done)(struct uv__work *w, int status)) {
   uv_once(&once, init_once);
   w->loop = loop;
   w->work = work;
@@ -265,8 +254,7 @@ void uv__work_submit(uv_loop_t* loop,
   post(&w->wq, kind);
 }
 
-
-static int uv__work_cancel(uv_loop_t* loop, uv_req_t* req, struct uv__work* w) {
+static int uv__work_cancel(uv_loop_t *loop, uv_req_t *req, struct uv__work *w) {
   int cancelled;
 
   uv_mutex_lock(&mutex);
@@ -291,11 +279,10 @@ static int uv__work_cancel(uv_loop_t* loop, uv_req_t* req, struct uv__work* w) {
   return 0;
 }
 
-
-void uv__work_done(uv_async_t* handle) {
-  struct uv__work* w;
-  uv_loop_t* loop;
-  QUEUE* q;
+void uv__work_done(uv_async_t *handle) {
+  struct uv__work *w;
+  uv_loop_t *loop;
+  QUEUE *q;
   QUEUE wq;
   int err;
 
@@ -314,16 +301,14 @@ void uv__work_done(uv_async_t* handle) {
   }
 }
 
-
-static void uv__queue_work(struct uv__work* w) {
-  uv_work_t* req = container_of(w, uv_work_t, work_req);
+static void uv__queue_work(struct uv__work *w) {
+  uv_work_t *req = container_of(w, uv_work_t, work_req);
 
   req->work_cb(req);
 }
 
-
-static void uv__queue_done(struct uv__work* w, int err) {
-  uv_work_t* req;
+static void uv__queue_done(struct uv__work *w, int err) {
+  uv_work_t *req;
 
   req = container_of(w, uv_work_t, work_req);
   uv__req_unregister(req->loop, req);
@@ -334,10 +319,7 @@ static void uv__queue_done(struct uv__work* w, int err) {
   req->after_work_cb(req, err);
 }
 
-
-int uv_queue_work(uv_loop_t* loop,
-                  uv_work_t* req,
-                  uv_work_cb work_cb,
+int uv_queue_work(uv_loop_t *loop, uv_work_t *req, uv_work_cb work_cb,
                   uv_after_work_cb after_work_cb) {
   if (work_cb == NULL)
     return UV_EINVAL;
@@ -346,39 +328,35 @@ int uv_queue_work(uv_loop_t* loop,
   req->loop = loop;
   req->work_cb = work_cb;
   req->after_work_cb = after_work_cb;
-  uv__work_submit(loop,
-                  &req->work_req,
-                  UV__WORK_CPU,
-                  uv__queue_work,
+  uv__work_submit(loop, &req->work_req, UV__WORK_CPU, uv__queue_work,
                   uv__queue_done);
   return 0;
 }
 
-
-int uv_cancel(uv_req_t* req) {
-  struct uv__work* wreq;
-  uv_loop_t* loop;
+int uv_cancel(uv_req_t *req) {
+  struct uv__work *wreq;
+  uv_loop_t *loop;
 
   switch (req->type) {
   case UV_FS:
-    loop =  ((uv_fs_t*) req)->loop;
-    wreq = &((uv_fs_t*) req)->work_req;
+    loop = ((uv_fs_t *)req)->loop;
+    wreq = &((uv_fs_t *)req)->work_req;
     break;
   case UV_GETADDRINFO:
-    loop =  ((uv_getaddrinfo_t*) req)->loop;
-    wreq = &((uv_getaddrinfo_t*) req)->work_req;
+    loop = ((uv_getaddrinfo_t *)req)->loop;
+    wreq = &((uv_getaddrinfo_t *)req)->work_req;
     break;
   case UV_GETNAMEINFO:
-    loop = ((uv_getnameinfo_t*) req)->loop;
-    wreq = &((uv_getnameinfo_t*) req)->work_req;
+    loop = ((uv_getnameinfo_t *)req)->loop;
+    wreq = &((uv_getnameinfo_t *)req)->work_req;
     break;
   case UV_RANDOM:
-    loop = ((uv_random_t*) req)->loop;
-    wreq = &((uv_random_t*) req)->work_req;
+    loop = ((uv_random_t *)req)->loop;
+    wreq = &((uv_random_t *)req)->work_req;
     break;
   case UV_WORK:
-    loop =  ((uv_work_t*) req)->loop;
-    wreq = &((uv_work_t*) req)->work_req;
+    loop = ((uv_work_t *)req)->loop;
+    wreq = &((uv_work_t *)req)->work_req;
     break;
   default:
     return UV_EINVAL;

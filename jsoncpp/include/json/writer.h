@@ -40,7 +40,7 @@ class Value;
  */
 class JSON_API StreamWriter {
 protected:
-  OStream* sout_; // not owned; will not delete
+  OStream *sout_; // not owned; will not delete
 public:
   StreamWriter();
   virtual ~StreamWriter();
@@ -51,7 +51,7 @@ public:
    *   stream instead.) \throw std::exception possibly, depending on
    * configuration
    */
-  virtual int write(Value const& root, OStream* sout) = 0;
+  virtual int write(Value const &root, OStream *sout) = 0;
 
   /** \brief A simple abstract factory.
    */
@@ -61,15 +61,15 @@ public:
     /** \brief Allocate a CharReader via operator new().
      * \throw std::exception if something goes wrong (e.g. invalid settings)
      */
-    virtual StreamWriter* newStreamWriter() const = 0;
+    virtual StreamWriter *newStreamWriter() const = 0;
   }; // Factory
 };   // StreamWriter
 
 /** \brief Write into stringstream, then return string, for convenience.
  * A StreamWriter will be created from the factory, used, and then deleted.
  */
-String JSON_API writeString(StreamWriter::Factory const& factory,
-                            Value const& root);
+String JSON_API writeString(StreamWriter::Factory const &factory,
+                            Value const &root);
 
 /** \brief Build a StreamWriter implementation.
 
@@ -124,22 +124,22 @@ public:
   /**
    * \throw std::exception if something goes wrong (e.g. invalid settings)
    */
-  StreamWriter* newStreamWriter() const override;
+  StreamWriter *newStreamWriter() const override;
 
   /** \return true if 'settings' are legal and consistent;
    *   otherwise, indicate bad settings via 'invalid'.
    */
-  bool validate(Json::Value* invalid) const;
+  bool validate(Json::Value *invalid) const;
   /** A simple way to update a specific setting.
    */
-  Value& operator[](const String& key);
+  Value &operator[](const String &key);
 
   /** Called by ctor, but you can use this to reset settings_.
    * \pre 'settings' != NULL (but Json::null is fine)
    * \remark Defaults:
    * \snippet src/lib_json/json_writer.cpp StreamWriterBuilderDefaults
    */
-  static void setDefaults(Json::Value* settings);
+  static void setDefaults(Json::Value *settings);
 };
 
 /** \brief Abstract class for writers.
@@ -149,7 +149,7 @@ class JSONCPP_DEPRECATED("Use StreamWriter instead") JSON_API Writer {
 public:
   virtual ~Writer();
 
-  virtual String write(const Value& root) = 0;
+  virtual String write(const Value &root) = 0;
 };
 
 /** \brief Outputs a Value in <a HREF="http://www.json.org">JSON</a> format
@@ -183,10 +183,10 @@ public:
   void omitEndingLineFeed();
 
 public: // overridden from Writer
-  String write(const Value& root) override;
+  String write(const Value &root) override;
 
 private:
-  void writeValue(const Value& value);
+  void writeValue(const Value &value);
 
   String document_;
   bool yamlCompatibilityEnabled_{false};
@@ -236,21 +236,21 @@ public: // overridden from Writer
    * \param root Value to serialize.
    * \return String containing the JSON document that represents the root value.
    */
-  String write(const Value& root) override;
+  String write(const Value &root) override;
 
 private:
-  void writeValue(const Value& value);
-  void writeArrayValue(const Value& value);
-  bool isMultilineArray(const Value& value);
-  void pushValue(const String& value);
+  void writeValue(const Value &value);
+  void writeArrayValue(const Value &value);
+  bool isMultilineArray(const Value &value);
+  void pushValue(const String &value);
   void writeIndent();
-  void writeWithIndent(const String& value);
+  void writeWithIndent(const String &value);
   void indent();
   void unindent();
-  void writeCommentBeforeValue(const Value& root);
-  void writeCommentAfterValueOnSameLine(const Value& root);
-  static bool hasCommentForValue(const Value& value);
-  static String normalizeEOL(const String& text);
+  void writeCommentBeforeValue(const Value &root);
+  void writeCommentAfterValueOnSameLine(const Value &root);
+  static bool hasCommentForValue(const Value &value);
+  static String normalizeEOL(const String &text);
 
   using ChildValues = std::vector<String>;
 
@@ -310,26 +310,26 @@ public:
    * \note There is no point in deriving from Writer, since write() should not
    * return a value.
    */
-  void write(OStream& out, const Value& root);
+  void write(OStream &out, const Value &root);
 
 private:
-  void writeValue(const Value& value);
-  void writeArrayValue(const Value& value);
-  bool isMultilineArray(const Value& value);
-  void pushValue(const String& value);
+  void writeValue(const Value &value);
+  void writeArrayValue(const Value &value);
+  bool isMultilineArray(const Value &value);
+  void pushValue(const String &value);
   void writeIndent();
-  void writeWithIndent(const String& value);
+  void writeWithIndent(const String &value);
   void indent();
   void unindent();
-  void writeCommentBeforeValue(const Value& root);
-  void writeCommentAfterValueOnSameLine(const Value& root);
-  static bool hasCommentForValue(const Value& value);
-  static String normalizeEOL(const String& text);
+  void writeCommentBeforeValue(const Value &root);
+  void writeCommentAfterValueOnSameLine(const Value &root);
+  static bool hasCommentForValue(const Value &value);
+  static String normalizeEOL(const String &text);
 
   using ChildValues = std::vector<String>;
 
   ChildValues childValues_;
-  OStream* document_;
+  OStream *document_;
   String indentString_;
   unsigned int rightMargin_{74};
   String indentation_;
@@ -350,11 +350,11 @@ String JSON_API valueToString(
     double value, unsigned int precision = Value::defaultRealPrecision,
     PrecisionType precisionType = PrecisionType::significantDigits);
 String JSON_API valueToString(bool value);
-String JSON_API valueToQuotedString(const char* value);
+String JSON_API valueToQuotedString(const char *value);
 
 /// \brief Output using the StyledStreamWriter.
 /// \see Json::operator>>()
-JSON_API OStream& operator<<(OStream&, const Value& root);
+JSON_API OStream &operator<<(OStream &, const Value &root);
 
 } // namespace Json
 
