@@ -7,7 +7,7 @@ set(CMAKE_SYSTEM_NAME Darwin)
 IF (WIN32)
 	MESSAGE(STATUS "Now is windows")
 ELSEIF (APPLE)
-	MESSAGE(STATUS "Now is Apple systens.")
+	MESSAGE(STATUS "Now is Apple systems.")
      set(CMAKE_CXX_COMPILER "/usr/local/Cellar/gcc/10.2.0/bin/g++-10")
      set(CMAKE_C_COMPILER "/usr/local/Cellar/gcc/10.2.0/bin/gcc-10")
 ELSEIF (UNIX)
@@ -19,7 +19,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -fe
 # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
 # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld -stdlib=libc++ -lc++abi")
 
-
+# 以下解决 cmake -G "Xcode" 无法编译的问题
 SET (CMAKE_C_COMPILER_WORKS 1)
 SET (CMAKE_CXX_COMPILER_WORKS 1)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
@@ -40,7 +40,8 @@ include_directories(
      jsoncpp/include 
      module_log 
      module_socket 
-     module_uv )
+     module_uv 
+     module_demo )
 
 #使用命令 ADD_SUBDIRECTORY 指明本项目包含一个子目录 db
 # 指定 编译子目录
@@ -53,6 +54,7 @@ ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/jsoncpp )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_log )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_socket )
 ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_uv )
+ADD_SUBDIRECTORY( ${PROJECT_SOURCE_DIR}/module_demo )
 
 # 指定源码目录
 # 查找当前目录下的所有源文件
@@ -73,4 +75,5 @@ TARGET_LINK_LIBRARIES(
     lib_log 
     lib_socket 
     jsoncpp 
-    uv )
+    uv 
+    lib_demo )

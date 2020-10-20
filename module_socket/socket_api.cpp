@@ -2,7 +2,7 @@
 //  socket_api.cpp
 //  lib_socket
 //
-//  Created by 吴祎诚 on 2020/10/18.
+//  Created by Von on 2020/10/18.
 //
 
 #include <json/json.h>

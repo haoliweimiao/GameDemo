@@ -8,6 +8,20 @@
 #ifndef demo_ref_time_h
 #define demo_ref_time_h
 
-#include <stdio.h>
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+/**
+ * time task
+ */
+void demo_ref_time();
+
+#ifdef __cplusplus
+}
+#endif
+
+
 
 #endif /* demo_ref_time_h */

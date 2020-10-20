@@ -8,6 +8,19 @@
 #ifndef demo_idle_basic_h
 #define demo_idle_basic_h
 
-#include <stdio.h>
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+/**
+ * idle basic demo
+ */
+void demo_idle_basic();
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* demo_idle_basic_h */
